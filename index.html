@@ -1,0 +1,1882 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Word Games &mdash; Just One, So Clover! &amp; Medium</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d0e16">
+<meta name="description" content="Word Games: Just One, So Clover! and Medium, on one phone or with everyone on their own. Great with two players or a crowd.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d0e16'/%3E%3Cellipse cx='32' cy='17' rx='9' ry='12' fill='%233ecf6e'/%3E%3Cellipse cx='32' cy='47' rx='9' ry='12' fill='%233ecf6e'/%3E%3Cellipse cx='17' cy='32' rx='12' ry='9' fill='%233ecf6e'/%3E%3Cellipse cx='47' cy='32' rx='12' ry='9' fill='%233ecf6e'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%23f4f5fb'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ground:#0d0e16;
+    --panel:#171a2b;
+    --panel-2:#1f2438;
+    --line:rgba(255,255,255,.10);
+    --ink:#f4f5fb;
+    --ink-dim:#a7adc6;
+    --ink-faint:#6b7192;
+    --good:#25c281;
+    --miss:#ff6a5a;
+    --m-one:#ff8a3d;
+    --m-clover:#3ecf6e;
+    --m-medium:#b07bff;
+    --accent:#ff8a3d;
+    --accent-ink:#0d0e16;
+    --paper:#f3ecd9;
+    --paper-ink:#1a1c2a;
+    --display:"Arial Black","Helvetica Neue Bold","Helvetica Neue",Helvetica,Arial,sans-serif;
+    --body:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:var(--ground);color:var(--ink);font-family:var(--body);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body[data-mode="one"]{--accent:var(--m-one)}
+  body[data-mode="clover"]{--accent:var(--m-clover)}
+  body[data-mode="medium"]{--accent:var(--m-medium)}
+  button{font-family:inherit;cursor:pointer;border:0;color:inherit;background:none;font-size:inherit}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button:focus-visible,input:focus-visible,[role="button"]:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:14px}
+  input{font-family:inherit}
+
+  .app{max-width:540px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;
+    padding:max(16px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));position:relative}
+  .flood{position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(120% 70% at 50% -12%, color-mix(in srgb,var(--accent) 38%, transparent), transparent 70%),
+      linear-gradient(180deg, color-mix(in srgb,var(--accent) 9%, var(--ground)), var(--ground) 60%);
+    transition:background .4s ease}
+  .screen{flex:1;display:flex;flex-direction:column;gap:14px;animation:rise .28s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* type */
+  .display{font-family:var(--display);font-weight:900;text-transform:uppercase;letter-spacing:-.03em;line-height:.9}
+  .eyebrow{color:var(--ink-faint);font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+  .dim{color:var(--ink-dim)}
+  .faint{color:var(--ink-faint)}
+  .center{text-align:center}
+  .small{font-size:13px}
+  h2{margin:0}
+
+  /* brand */
+  .brand{padding:10px 2px 4px}
+  .brand h1{font-family:var(--display);font-weight:900;margin:0;line-height:.86;font-size:clamp(56px,19vw,92px);letter-spacing:-.05em;text-transform:uppercase}
+  .brand h1 i{font-style:normal;color:var(--m-clover)}
+  .brand .ko{font-size:15px;color:var(--ink-dim);margin-top:10px}
+
+  /* mode cards */
+  .modes{display:flex;flex-direction:column;gap:12px}
+  .mode{position:relative;overflow:hidden;border-radius:22px;padding:18px 18px 18px 22px;background:var(--panel);
+    border:1px solid var(--line);text-align:left;display:flex;flex-direction:column;gap:6px;
+    transition:transform .12s ease}
+  .mode:active{transform:scale(.98)}
+  .mode .swatch{position:absolute;inset:0 auto 0 0;width:7px;background:var(--mc)}
+  .mode .blob{position:absolute;top:-50px;right:-40px;width:150px;height:150px;border-radius:50%;background:var(--mc);opacity:.16;filter:blur(6px)}
+  .mode .name{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:-.03em;text-transform:uppercase;color:var(--mc);position:relative;line-height:1}
+  .mode .pitch{position:relative;color:var(--ink);font-size:15px;line-height:1.35}
+  .mode .ppl{position:relative;color:var(--ink-dim);font-size:12.5px;font-weight:700}
+
+  /* buttons */
+  .cta{width:100%;padding:18px;border-radius:20px;background:var(--accent);color:var(--accent-ink);
+    font-family:var(--display);font-weight:900;font-size:19px;letter-spacing:.02em;text-transform:uppercase;
+    box-shadow:0 12px 30px -12px color-mix(in srgb,var(--accent) 75%,transparent);transition:transform .1s ease}
+  .cta:active{transform:translateY(2px) scale(.99)}
+  .cta.alt{background:var(--panel);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .cta .sub{display:block;font-family:var(--body);font-weight:600;text-transform:none;letter-spacing:0;font-size:13px;opacity:.75;margin-top:4px}
+  .ghost{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink-dim);font-weight:700;font-size:13px}
+  .ghost:active{transform:scale(.96)}
+  .ghost.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+  .link{color:var(--accent);font-weight:700;font-size:14px;padding:6px 2px}
+  .row{display:flex;gap:10px;align-items:center}
+  .row.wrap{flex-wrap:wrap}
+  .grow{flex:1}
+  .stack{display:flex;flex-direction:column;gap:10px}
+  .bottom{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding-top:12px}
+  .topback{align-self:flex-start;color:var(--ink-dim);font-weight:700;font-size:14px;padding:6px 2px}
+
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+  .seg button{padding:8px 13px;border-radius:999px;font-weight:700;font-size:14px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+  /* panels */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px}
+  .card.tint{background:color-mix(in srgb,var(--accent) 10%,var(--panel));border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+  .rules{margin:0;padding:0;list-style:none;counter-reset:r;display:flex;flex-direction:column;gap:12px}
+  .rules li{counter-increment:r;display:grid;grid-template-columns:30px 1fr;gap:10px;line-height:1.4;font-size:15px}
+  .rules li::before{content:counter(r);width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-family:var(--display);font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center}
+
+  /* inputs */
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  .inp{width:100%;padding:15px 16px;border-radius:16px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:17px}
+  .inp:focus{outline:none;border-color:var(--accent)}
+  .inp.code{font-family:var(--display);font-size:34px;letter-spacing:.3em;text-transform:uppercase;text-align:center;padding:12px}
+  .inp.big{font-family:var(--display);font-size:26px;text-align:center;padding:14px;text-transform:uppercase}
+  .err{color:var(--miss);font-size:14px;font-weight:600}
+
+  /* players */
+  .plist{display:flex;flex-direction:column;gap:8px}
+  .p{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-weight:700}
+  .p .dot{width:9px;height:9px;border-radius:50%;background:var(--good);flex:none}
+  .p .dot.off{background:var(--ink-faint)}
+  .p .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .p .you{color:var(--ink-faint);font-weight:600;font-size:12px}
+  .p .x{color:var(--ink-faint);font-size:20px;line-height:1;padding:0 4px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:10px 14px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-weight:700;font-size:15px}
+  .chip.done{background:color-mix(in srgb,var(--good) 18%,var(--panel));border-color:color-mix(in srgb,var(--good) 40%,transparent)}
+  .chip.bad{background:color-mix(in srgb,var(--miss) 14%,var(--panel));border-color:color-mix(in srgb,var(--miss) 40%,transparent)}
+
+  /* game top bar */
+  .gtop{display:flex;align-items:center;gap:8px}
+  .mchip{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:15px;color:var(--accent);letter-spacing:-.01em;white-space:nowrap}
+  .gtop .info{flex:1;color:var(--ink-dim);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-weight:900;color:var(--ink-dim);font-size:16px;flex:none}
+
+  /* prompt card */
+  .prompt{border-radius:24px;padding:22px 20px;background:var(--panel);border:1px solid var(--line);position:relative;overflow:hidden}
+  .prompt::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:var(--accent)}
+  .prompt .t{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(34px,11vw,56px);line-height:.98;letter-spacing:-.025em;color:var(--accent);word-break:break-word;margin-top:6px}
+
+  .hint{margin:0;color:var(--ink-dim);font-size:15px;line-height:1.45}
+  .hint b{color:var(--ink)}
+  .wait{display:flex;align-items:center;gap:10px;justify-content:center;color:var(--ink-dim);font-weight:700;font-size:15px;padding:14px;text-align:center}
+  .wait::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 1.1s ease-in-out infinite;flex:none}
+  @keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+
+  .capbar{display:flex;align-items:center;gap:12px}
+  .capbar .crown{font-size:34px;line-height:1}
+  .capname{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(26px,8vw,36px);line-height:.95;letter-spacing:-.02em;color:var(--accent);word-break:break-word}
+  .handoff{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:10px 0}
+  .handoff .to{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(40px,13vw,64px);line-height:.9;letter-spacing:-.03em;color:var(--accent);word-break:break-word}
+  .handoff .lbl{color:var(--ink-dim);font-size:15px}
+  .handoff .warn{font-size:14px;color:var(--ink-faint);max-width:32ch;line-height:1.4}
+  .handoff .warn b{color:var(--ink-dim)}
+
+  .banner{border-radius:20px;padding:16px;text-align:center;font-weight:800;font-size:17px}
+  .banner.good{background:color-mix(in srgb,var(--good) 16%,var(--panel));color:var(--good)}
+  .banner.bad{background:color-mix(in srgb,var(--miss) 14%,var(--panel));color:var(--miss)}
+  .banner.neutral{background:var(--panel);color:var(--ink)}
+  .banner .big{display:block;font-family:var(--display);font-size:38px;line-height:1;margin-bottom:4px;text-transform:uppercase;letter-spacing:-.02em}
+
+  /* ---- Just One ---- */
+  .clues{display:flex;flex-direction:column;gap:8px}
+  .clue{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:16px;background:var(--panel);border:1px solid var(--line);text-align:left;width:100%}
+  .clue .t{font-family:var(--display);text-transform:uppercase;font-size:21px;letter-spacing:-.01em;min-width:0;overflow-wrap:anywhere}
+  .clue .by{margin-left:auto;font-size:12px;color:var(--ink-faint);font-weight:700;white-space:nowrap}
+  .clue .why{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:999px;color:var(--miss);background:color-mix(in srgb,var(--miss) 14%,transparent);white-space:nowrap}
+  .clue.off{background:color-mix(in srgb,var(--miss) 6%,var(--panel));border-color:color-mix(in srgb,var(--miss) 30%,transparent)}
+  .clue.off .t{text-decoration:line-through;text-decoration-thickness:3px;color:var(--ink-faint)}
+  .gclues{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:6px 0}
+  .gclue{font-family:var(--display);text-transform:uppercase;font-size:clamp(22px,7vw,32px);padding:14px 18px;border-radius:18px;background:var(--panel);border:2px solid var(--accent);letter-spacing:-.01em;overflow-wrap:anywhere}
+  .inrow{display:flex;gap:8px;align-items:center}
+  .inrow .n{font-family:var(--display);color:var(--accent);width:22px;text-align:center;flex:none}
+
+  /* ---- So Clover! ---- */
+  .clover{display:grid;grid-template-columns:34px minmax(0,1fr) 34px;grid-template-rows:34px auto 34px;gap:6px}
+  .leaf{background:color-mix(in srgb,var(--accent) 22%,var(--panel));color:var(--ink);border:1.5px solid color-mix(in srgb,var(--accent) 60%,transparent);
+    border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:var(--display);text-transform:uppercase;font-size:14px;
+    letter-spacing:.02em;overflow:hidden;white-space:nowrap;padding:0 12px;min-width:0}
+  .leaf.l0{grid-area:1/2}
+  .leaf.l1{grid-area:2/3;writing-mode:vertical-rl;padding:12px 0}
+  .leaf.l2{grid-area:3/2}
+  .leaf.l3{grid-area:2/1;writing-mode:vertical-rl;transform:rotate(180deg);padding:12px 0}
+  .leaf.q{color:color-mix(in srgb,var(--accent) 80%,white);font-size:13px}
+  .slots{grid-area:2/2;display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:0}
+  .cslot{aspect-ratio:1;border-radius:14px;border:2px dashed rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;
+    color:var(--ink-faint);font-size:12px;font-weight:700;text-align:center;padding:8px;width:100%}
+  .cslot.target{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .ccard{position:relative;aspect-ratio:1;width:100%;border-radius:14px;background:var(--paper);color:var(--paper-ink);
+    box-shadow:0 8px 18px -10px rgba(0,0,0,.8);transition:transform .15s ease;cursor:default}
+  .ccard.act{cursor:pointer}
+  .ccard.act:active{transform:scale(.97)}
+  .cw{position:absolute;font-weight:900;font-size:clamp(9.5px,2.9vw,12.5px);text-transform:uppercase;letter-spacing:.01em;line-height:1;white-space:nowrap;color:#8a8574}
+  .cw.hot{color:var(--paper-ink)}
+  .cw.s0{top:8px;left:4px;right:4px;text-align:center}
+  .cw.s2{bottom:8px;left:4px;right:4px;text-align:center}
+  .cw.s1,.cw.s3{top:4px;bottom:4px;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center}
+  .cw.s1{right:8px}
+  .cw.s3{left:8px;transform:rotate(180deg)}
+  .ccard .rot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;background:rgba(13,14,22,.10);color:var(--paper-ink);font-size:19px;font-weight:900;line-height:1}
+  .ccard .mark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:22px;font-weight:900}
+  .ccard.sel{outline:3px solid var(--accent);outline-offset:2px;transform:scale(.96)}
+  .ccard.lock{box-shadow:0 0 0 3px var(--good)}
+  .ccard.ok{box-shadow:0 0 0 3px var(--good)}
+  .ccard.bad{box-shadow:0 0 0 3px var(--miss)}
+  .tray{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .leafrow{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center}
+  .leafrow .pairlbl{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim)}
+  .leafrow .pairlbl b{color:var(--ink)}
+  .leafno{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-size:13px;display:flex;align-items:center;justify-content:center}
+
+  /* ---- Medium ---- */
+  .pair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center}
+  .pw{background:var(--paper);color:var(--paper-ink);border-radius:18px;padding:18px 10px;text-align:center;font-family:var(--display);text-transform:uppercase;
+    font-size:clamp(18px,6vw,28px);letter-spacing:-.01em;overflow-wrap:anywhere;box-shadow:0 10px 24px -14px rgba(0,0,0,.8)}
+  .pw.q{background:transparent;border:2px dashed rgba(255,255,255,.18);color:var(--ink-faint);box-shadow:none}
+  .pw small{display:block;font-family:var(--body);text-transform:none;font-size:12px;font-weight:700;color:#77725f;margin-top:6px;letter-spacing:0}
+  .pw.q small{color:var(--ink-faint)}
+  .plus{font-family:var(--display);font-size:24px;color:var(--ink-faint)}
+  .hand{display:flex;flex-wrap:wrap;gap:8px}
+  .hcard{padding:14px 16px;border-radius:14px;background:var(--paper);color:var(--paper-ink);font-family:var(--display);text-transform:uppercase;font-size:16px;letter-spacing:.01em}
+  .hcard:active{transform:scale(.96)}
+  .said{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .said div{border-radius:18px;padding:14px 10px;text-align:center;background:var(--panel);border:2px solid var(--line);animation:pop .45s cubic-bezier(.2,.9,.3,1.3) both}
+  .said div:nth-child(2){animation-delay:.12s}
+  .said.match div{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--panel))}
+  .said b{display:block;font-family:var(--display);text-transform:uppercase;font-size:clamp(20px,6.4vw,30px);overflow-wrap:anywhere;letter-spacing:-.01em}
+  .said span{font-size:12px;font-weight:700;color:var(--ink-dim)}
+  @keyframes pop{from{opacity:0;transform:scale(.6) rotate(-4deg)}}
+  .chain{display:flex;flex-direction:column;gap:4px}
+  .chain div{font-size:13px;color:var(--ink-faint);font-weight:700;text-align:center}
+  .tries{display:flex;gap:6px;justify-content:center}
+  .tries i{width:10px;height:10px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line)}
+  .tries i.on{background:var(--accent);border-color:transparent}
+  .countdown{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,6,12,.86);z-index:45;
+    font-family:var(--display);text-transform:uppercase;color:var(--accent);font-size:min(40vw,220px);text-align:center;line-height:1}
+  .countdown span{animation:pop .5s cubic-bezier(.2,.9,.3,1.3) both}
+  .countdown span.say{font-size:min(16vw,90px)}
+
+  /* sheet */
+  .sheet{position:fixed;inset:0;background:rgba(5,6,12,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:30;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease both}
+  .sheet .in{width:100%;max-width:540px;max-height:88dvh;overflow:auto;background:var(--ground);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;padding:20px 18px max(22px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;animation:up .25s ease both}
+  @keyframes fade{from{opacity:0}}
+  @keyframes up{from{transform:translateY(30px)}}
+  .toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:11px 18px;border-radius:999px;font-weight:700;font-size:14px;z-index:40;animation:rise .2s ease both;max-width:90vw;text-align:center}
+  .netbar{background:color-mix(in srgb,var(--miss) 18%,var(--panel));color:var(--ink);border:1px solid color-mix(in srgb,var(--miss) 45%,transparent);border-radius:14px;padding:10px 12px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px}
+
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+  .room-code{font-family:var(--display);font-size:clamp(54px,18vw,80px);letter-spacing:.14em;line-height:1;color:var(--accent);text-align:center}
+  hr.sep{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+  @media (prefers-reduced-motion: reduce){ .screen,.said div,.countdown span{animation:none} }
+</style>
+</head>
+<body>
+<div class="flood"></div>
+<main class="app" id="app"></main>
+<div id="layer"></div>
+<script>
+/* ---------- WORDS ----------
+   One word per line: "Word: obvious, clues, for, it"
+   Every game draws from this list. The clues after the colon are only used in two-player
+   Just One, where a clue that matches one of them gets cancelled for being too obvious. */
+const WORDS = `Apple: fruit, red, tree, pie, iphone, green, newton, orchard
+Banana: fruit, yellow, monkey, peel, split, bunch
+Pizza: cheese, italy, italian, slice, pepperoni, dough, delivery
+Chocolate: sweet, candy, cocoa, brown, bar, dark
+Coffee: bean, morning, caffeine, cup, starbucks, espresso, mug
+Cheese: mouse, cheddar, milk, dairy, swiss, pizza, holes
+Bread: loaf, toast, bake, baker, sandwich, flour, dough
+Egg: chicken, hen, yolk, shell, omelette, breakfast, easter
+Honey: bee, sweet, sticky, bear, pooh, hive
+Popcorn: movie, cinema, butter, corn, pop, kernel
+Sushi: fish, japan, japanese, rice, raw, roll, chopsticks
+Taco: mexico, mexican, tuesday, shell, burrito, tortilla
+Burger: beef, bun, mcdonalds, patty, cheese, fries
+Carrot: orange, rabbit, bunny, vegetable, snowman, eyes
+Lemon: sour, yellow, citrus, lime, lemonade, fruit
+Pumpkin: halloween, orange, pie, jack, lantern, squash
+Cake: birthday, candle, candles, bake, frosting, icing, dessert
+Cookie: chocolate, chip, biscuit, jar, monster, bake, milk
+Soup: bowl, spoon, hot, tomato, broth, chicken
+Salt: pepper, sea, shaker, salty, sodium
+Pancake: syrup, breakfast, flat, flip, maple, stack
+Strawberry: red, fruit, berry, jam, cream, shortcake
+Pineapple: fruit, hawaii, spiky, tropical, pizza, sponge
+Coconut: palm, tree, tropical, milk, island, shell
+Mushroom: fungus, mario, forest, toadstool, pizza
+Onion: cry, tears, layers, shrek, ring, rings
+Garlic: vampire, vampires, breath, bread, clove, italian
+Sandwich: bread, lunch, ham, cheese, subway, sub
+Jam: toast, strawberry, jelly, sticky, sweet, traffic
+Salad: lettuce, green, healthy, vegetables, bowl, caesar
+Pasta: italy, italian, spaghetti, noodle, sauce, tomato
+Rice: white, grain, china, asian, sushi, bowl
+Potato: chips, fries, mash, mashed, vegetable, couch
+Corn: yellow, cob, popcorn, field, maize, vegetable
+Peanut: butter, nut, allergy, elephant, jelly, shell
+Pepper: salt, spicy, hot, red, black, green
+Candy: sweet, sugar, sweets, chocolate, lollipop, halloween
+Tea: cup, drink, hot, england, british, bag, green, kettle
+Milk: cow, white, drink, dairy, cereal, bottle
+Wine: red, grape, grapes, glass, drink, bottle, alcohol
+Beer: drink, pub, bar, alcohol, pint, glass, bottle
+Water: drink, wet, liquid, sea, ocean, blue, h2o
+Dog: bark, puppy, pet, cat, woof, bone, leash
+Cat: meow, kitten, pet, dog, whiskers, purr, mouse
+Elephant: trunk, big, grey, gray, africa, memory, ivory, tusk
+Giraffe: neck, tall, long, spots, africa, zoo
+Lion: king, mane, roar, jungle, africa, pride, cat
+Tiger: stripes, cat, orange, jungle, india, tony
+Penguin: ice, bird, antarctica, cold, tuxedo, waddle
+Shark: jaws, fin, teeth, ocean, sea, fish, bite
+Whale: ocean, big, blue, sea, moby, huge, blubber
+Dolphin: ocean, sea, smart, flipper, fin, porpoise
+Octopus: tentacles, eight, ink, arms, ocean, sea, squid
+Monkey: banana, bananas, ape, jungle, tree, climb
+Bear: grizzly, teddy, honey, polar, brown, hibernate, forest
+Rabbit: bunny, carrot, hop, ears, easter, hare
+Snake: slither, hiss, reptile, venom, python, cobra
+Frog: jump, green, pond, prince, toad, lily, ribbit
+Owl: hoot, night, wise, bird, harry, potter, nocturnal
+Horse: ride, pony, saddle, gallop, hoof, stable, neigh
+Cow: milk, moo, farm, beef, udder, bull
+Pig: oink, pink, farm, mud, bacon, pork
+Chicken: egg, eggs, hen, farm, rooster, cluck, bird
+Duck: quack, pond, bird, donald, feathers, water
+Bee: honey, sting, buzz, hive, yellow, insect, queen
+Spider: web, eight, legs, spiderman, arachnid, creepy
+Butterfly: wings, caterpillar, insect, colorful, flutter, fly
+Ant: small, tiny, insect, colony, hill, picnic
+Dinosaur: extinct, trex, jurassic, fossil, big, reptile
+Dragon: fire, wings, fly, fantasy, breathe, knight, scales
+Unicorn: horn, horse, rainbow, magic, magical, myth
+Jellyfish: sting, ocean, sea, jelly, tentacles, float
+Crab: claw, claws, sea, beach, pinch, sideways, red
+Snail: slow, shell, slime, garden, slug
+Turtle: shell, slow, sea, ninja, tortoise, green
+Parrot: bird, talk, pirate, colorful, green, feathers
+Bat: cave, night, vampire, fly, batman, baseball, blind
+Fox: red, sly, clever, tail, cunning, forest
+Wolf: howl, moon, pack, dog, bad, werewolf
+Kangaroo: australia, jump, hop, pouch, baby, joey
+Panda: bear, china, bamboo, black, white, kung
+Zebra: stripes, horse, black, white, africa, crossing
+Camel: desert, hump, humps, egypt, sand, ride
+Mouse: cheese, rat, small, computer, cat, mickey, squeak
+Squirrel: nut, nuts, tree, acorn, tail, park
+Goldfish: fish, bowl, pet, orange, memory, water
+Hamster: pet, wheel, small, cage, rodent, cute
+Nest: bird, egg, eggs, tree, twigs, home
+Feather: bird, light, pillow, wing, quill, soft
+Wing: bird, fly, chicken, plane, feather, angel
+Zombie: undead, dead, brains, walking, apocalypse, monster
+Vampire: blood, dracula, bite, fangs, garlic, bat, night
+Ghost: boo, halloween, spirit, haunted, sheet, spooky
+Witch: broom, broomstick, halloween, hat, magic, spell, cauldron
+Pirate: ship, parrot, treasure, captain, sea, eyepatch, arrr
+Ninja: japan, stealth, black, sword, warrior, karate
+Robot: machine, metal, ai, android, computer, beep
+Alien: space, ufo, martian, green, mars, extraterrestrial, et
+Astronaut: space, rocket, moon, nasa, suit, orbit
+Doctor: hospital, nurse, medicine, sick, patient, stethoscope
+Teacher: school, class, student, students, classroom, lesson
+Chef: cook, kitchen, food, restaurant, hat, cooking
+Farmer: farm, tractor, crops, field, barn, cow
+Police: cop, officer, crime, badge, siren, law, arrest
+King: queen, crown, throne, royal, castle, prince, kingdom
+Queen: king, crown, royal, england, elizabeth, throne, bee
+Princess: prince, crown, castle, disney, royal, tiara, queen
+Knight: armor, armour, sword, horse, castle, king, shining
+Clown: circus, funny, nose, red, joker, makeup, balloon
+Wizard: magic, wand, harry, potter, merlin, spell, hat, gandalf
+Baby: cry, diaper, infant, small, crib, bottle, mother
+Grandma: grandmother, old, granny, knit, cookies, family
+Superhero: cape, hero, marvel, powers, superman, batman, comic
+Santa: christmas, claus, beard, red, presents, reindeer, gifts, chimney
+Mermaid: fish, tail, ocean, sea, ariel, little, water
+Cowboy: horse, hat, west, western, ranch, boots, sheriff, texas
+Detective: sherlock, holmes, mystery, crime, clue, police, investigate
+Spy: secret, agent, bond, james, 007, cia, mission
+Angel: heaven, wings, halo, god, fly, cherub
+Devil: red, horns, satan, hell, evil, pitchfork
+Moon: night, sky, space, full, crescent, astronaut, lunar
+Sun: hot, star, sky, yellow, day, light, sunshine
+Star: sky, night, shine, twinkle, sun, space, shooting
+Planet: earth, mars, space, jupiter, world, solar, orbit
+Rainbow: colors, colours, rain, sky, arc, pot, gold, unicorn
+Cloud: sky, rain, white, fluffy, weather, storm
+Rain: water, wet, cloud, umbrella, drops, storm, weather
+Snow: cold, winter, white, snowman, ice, flake, ski
+Thunder: lightning, storm, loud, rain, thor, boom
+Wind: blow, air, breeze, storm, kite, windy
+Volcano: lava, eruption, erupt, mountain, hot, magma, hawaii
+Ocean: sea, water, blue, waves, beach, atlantic, pacific, fish
+Beach: sand, sea, ocean, sun, waves, summer, holiday, vacation
+Island: tropical, ocean, sea, desert, palm, water
+Desert: sand, hot, dry, camel, sahara, cactus
+Mountain: climb, high, peak, everest, hill, snow, tall
+Forest: trees, tree, woods, green, jungle
+Jungle: tarzan, trees, forest, rainforest, vines, animals, book
+River: water, flow, stream, boat, bank, nile, bridge
+Cave: dark, bat, bats, rock, hole, underground
+Tree: leaves, leaf, green, wood, forest, branch, oak
+Flower: rose, petal, petals, garden, bloom, bee, tulip
+Rose: red, flower, thorn, thorns, love, valentine, petal
+Grass: green, lawn, mow, field, garden, cut
+Fire: hot, flame, burn, smoke, red, heat, camp
+Ice: cold, cube, frozen, water, skate, freeze
+Shadow: dark, sun, light, shade, follow, silhouette
+Diamond: ring, jewel, gem, shiny, expensive, carat, rock
+Gold: money, rich, metal, yellow, medal, coin, treasure
+Crystal: glass, clear, ball, shiny, gem, quartz
+Castle: king, queen, knight, moat, tower, princess, fortress
+Pyramid: egypt, triangle, pharaoh, tomb, sphinx, ancient
+Bridge: river, cross, water, golden, gate, london
+Lighthouse: sea, light, coast, ship, beacon, tower, ocean
+Hospital: doctor, nurse, sick, ambulance, patient, medicine
+School: teacher, student, students, class, learn, education, bus
+Library: books, book, read, quiet, librarian, study
+Airport: plane, flight, fly, travel, airplane, terminal
+Museum: art, history, painting, paintings, exhibit, gallery
+Zoo: animals, animal, cage, lion, keeper, elephant
+Circus: clown, tent, acrobat, elephant, ringmaster, show
+Prison: jail, bars, cell, criminal, guard, lock
+Bank: money, cash, vault, robbery, account, loan
+Kitchen: cook, food, oven, stove, chef, fridge
+Bathroom: toilet, shower, bath, sink, soap, towel
+Garden: flowers, flower, plants, grow, vegetables, grass
+Paris: france, eiffel, tower, french, city, love
+London: england, big, ben, queen, british, uk, thames
+Egypt: pyramid, pyramids, pharaoh, nile, desert, cairo
+Japan: tokyo, sushi, asia, japanese, anime, samurai
+Hollywood: movies, movie, film, stars, california, sign, actor
+Space: stars, planet, rocket, astronaut, galaxy, universe, nasa
+Mars: planet, red, space, chocolate, martian, rover
+Car: drive, wheels, road, vehicle, engine, ford
+Bicycle: bike, ride, wheels, pedal, cycle, two
+Train: rail, railway, station, track, tracks, choo, steam
+Airplane: fly, plane, wings, sky, pilot, flight, jet
+Boat: sail, water, ship, sea, row, float
+Rocket: space, launch, moon, nasa, blast, ship, fly
+Helicopter: fly, blades, chopper, propeller, sky
+Bus: school, yellow, ride, stop, driver, public
+Submarine: yellow, underwater, sea, water, navy, ocean
+Skateboard: skate, wheels, board, tony, hawk, trick
+Umbrella: rain, wet, cover, dry, open
+Clock: time, hour, tick, tock, watch, wall, alarm
+Book: read, page, pages, library, story, novel, author
+Phone: call, mobile, cell, iphone, smartphone, ring, text
+Computer: laptop, keyboard, mouse, screen, pc, apple, internet
+Television: tv, watch, screen, remote, show, channel
+Camera: photo, picture, photograph, lens, snap, click, flash
+Guitar: music, strings, rock, play, instrument, electric
+Piano: keys, music, play, instrument, grand, black, white
+Drum: beat, drums, music, stick, sticks, bang, band
+Balloon: air, party, pop, float, helium, birthday, red
+Candle: light, fire, wax, wick, birthday, flame
+Key: lock, door, open, unlock, house, piano
+Mirror: reflection, glass, look, image, face, snow
+Pillow: bed, sleep, soft, head, fight, feather
+Bed: sleep, pillow, night, bedroom, sheets, mattress
+Chair: sit, seat, table, furniture, legs, desk
+Door: open, close, knock, key, house, handle, entrance
+Window: glass, view, house, open, pane, curtain
+Hat: head, cap, wear, cowboy, top, sun
+Shoe: foot, feet, wear, lace, sneaker, boot, heel
+Sock: foot, feet, shoe, pair, wool, wear
+Glasses: eyes, see, vision, sight, lens, lenses, optician, sun
+Crown: king, queen, royal, head, jewel, gold, throne
+Ring: finger, diamond, wedding, gold, marry, engagement, jewelry
+Glove: hand, hands, winter, fingers, boxing, baseball, warm
+Scarf: neck, winter, warm, wool, cold
+Backpack: bag, school, carry, hiking, travel, shoulders
+Suitcase: travel, luggage, bag, holiday, airport, pack
+Passport: travel, country, airport, id, stamp, border
+Ticket: movie, train, pass, concert, show, entry, lottery
+Newspaper: news, paper, read, daily, headline, press
+Letter: mail, post, write, alphabet, envelope, stamp
+Calendar: date, days, month, year, time, schedule
+Battery: power, energy, charge, electric, phone
+Wallet: money, cash, purse, pocket, card, cards, leather
+Money: cash, dollar, rich, pay, coin, bank, gold
+Map: direction, directions, travel, world, treasure, atlas, compass
+Treasure: gold, pirate, chest, map, hunt, pirates, buried
+Sword: knight, fight, blade, weapon, sharp, steel
+Shield: knight, protect, defense, captain, armor, sword
+Bomb: explode, explosion, boom, blast, tnt, dynamite
+Gift: present, birthday, christmas, wrap, box, give
+Ladder: climb, up, rungs, steps, high, fireman
+Hammer: nail, nails, tool, thor, hit, bang
+Scissors: cut, paper, sharp, rock, hair, blade
+Paint: brush, color, colour, art, wall, artist, canvas
+Pencil: write, draw, lead, paper, eraser, pen, sharpen
+Crayon: color, colour, draw, wax, crayola, kid
+Toothbrush: teeth, brush, tooth, toothpaste, dentist, clean
+Soap: wash, clean, bubbles, hands, shower, bar
+Bubble: soap, pop, blow, gum, bath, float
+Magnet: metal, attract, fridge, north, pole, iron
+Rope: tie, knot, climb, string, pull, tug
+Tent: camping, camp, outdoor, sleep, sleeping, circus
+Kite: fly, wind, string, sky, flying, paper
+Snowman: snow, winter, carrot, frosty, cold, olaf
+Fireworks: bang, sky, explode, colors, july, night, sparkle
+Vacuum: clean, dust, hoover, suck, floor, cleaner
+Fridge: cold, kitchen, food, freezer, ice, magnet
+Oven: bake, hot, kitchen, cook, stove, cake
+Fork: knife, spoon, eat, cutlery, prong, road
+Spoon: fork, soup, eat, cutlery, silver, stir
+Bottle: drink, glass, water, wine, cap, message
+Mask: face, halloween, hide, costume, covid, zorro, disguise
+Puzzle: pieces, jigsaw, solve, game, piece, crossword
+Football: soccer, ball, kick, goal, sport, team, touchdown
+Basketball: hoop, ball, nba, dunk, court, jordan, sport
+Tennis: racket, racquet, ball, court, net, wimbledon, sport
+Golf: ball, club, hole, course, tiger, putt, green
+Chess: board, king, queen, checkmate, game, pawn, knight
+Olympics: games, gold, medal, rings, sports, torch
+Swimming: pool, swim, water, dive, goggles, olympics
+Skiing: snow, ski, mountain, slope, winter, poles
+Boxing: punch, gloves, glove, ring, fight, ali, boxer
+Dance: music, ballet, move, party, disco, tango, salsa
+Music: song, songs, sound, band, listen, notes, radio
+Movie: film, cinema, popcorn, watch, hollywood, actor, theater
+Party: birthday, celebrate, fun, dance, music, balloons
+Wedding: marriage, marry, bride, groom, ring, church, dress
+Birthday: cake, party, candles, presents, gift, age, celebrate
+Halloween: pumpkin, costume, candy, spooky, october, trick, treat
+Christmas: santa, tree, december, presents, snow, xmas, gifts
+Holiday: vacation, trip, travel, beach, break, summer
+Summer: sun, hot, beach, holiday, vacation, season, july
+Winter: cold, snow, season, december, christmas, ice
+Night: dark, moon, sleep, stars, evening, day
+Dream: sleep, night, nightmare, bed, wish, imagine
+Love: heart, romance, valentine, kiss, red, feelings, like
+Kiss: lips, love, smooch, mouth, peck, romance
+Heart: love, red, beat, organ, valentine, pump, blood
+Brain: think, smart, head, mind, organ, intelligence, zombie
+Tooth: teeth, dentist, fairy, bite, white, mouth, brush
+Nose: smell, face, sniff, red, nostril, rudolph, pinocchio
+Eye: see, sight, look, vision, blue, glasses
+Hair: head, blonde, cut, brush, long, bald, barber
+Hand: finger, fingers, glove, wave, arm, palm, five
+Laugh: funny, joke, smile, happy, giggle, ha, haha
+Sleep: bed, night, tired, dream, nap, rest, snore
+Time: clock, watch, hour, minute, second, tick
+Secret: hidden, hide, tell, whisper, private, mystery
+Magic: trick, wizard, wand, spell, rabbit, hat, magician
+Echo: repeat, cave, sound, voice, back, canyon
+Tattoo: ink, skin, needle, arm, design, body
+Heaven: sky, god, angel, clouds, paradise, hell`
+  .split("\n").map(s => s.trim()).filter(Boolean).map(s => {
+    const [w, ob = ""] = s.split(":");
+    return { w: w.trim(), ob: ob.split(",").map(x => x.trim()).filter(Boolean) };
+  });
+
+const MODES = {
+  one: {
+    name: "Just One", color: "var(--m-one)", min: 2, max: 10, ppl: "2–10 players · co-op",
+    pitch: "Everyone writes a one-word clue for the guesser. But if your clue matches someone else's, both are cancelled.",
+    rules: [
+      "One player is the <b>guesser</b>. Everyone else sees the mystery word.",
+      "Everyone else secretly writes a one-word clue.",
+      "Matching clues cancel each other out, and so do clues that are too close. The guesser only sees what's left.",
+      "The guesser gets one guess. Right keeps the card, a pass loses it, and a wrong guess loses the next card too.",
+      "With 3 players everyone writes 2 clues. With 2, you write 3, and any clue that's too obvious is cancelled."
+    ]
+  },
+  clover: {
+    name: "So Clover!", color: "var(--m-clover)", min: 2, max: 8, ppl: "2–8 players · co-op",
+    pitch: "Link the words on your secret clover, then everyone rebuilds each other's clovers from the clues.",
+    rules: [
+      "Everyone gets a secret clover of 4 word cards. Each leaf touches two words.",
+      "Write one word on each leaf that links its two words.",
+      "Then, one clover at a time, the others rebuild it from the clues: 4 cards plus a decoy, in the right spots and turned the right way.",
+      "All right on the first try scores 6. Right cards stay put and you get one more try, for 3. The clover's owner stays silent!"
+    ]
+  },
+  medium: {
+    name: "Medium", color: "var(--m-medium)", min: 2, max: 10, ppl: "2–10 players · co-op",
+    pitch: "Two players, two words. On 3-2-1, both say the word that sits between them. Can you read each other's minds?",
+    rules: [
+      "Two players each play a word card from their hand.",
+      "Count 3-2-1 and both say a word that connects the two. Match to score!",
+      "No match? The two words you just said become the new pair. You get 3 tries, for 3, 2 or 1 point.",
+      "You can't say either word that's on the table. Every round, the next pair plays."
+    ]
+  }
+};
+</script>
+<script>
+(() => {
+"use strict";
+
+/* ================= utils ================= */
+const $ = s => document.querySelector(s);
+const app = $("#app"), layer = $("#layer");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rnd = n => Math.floor(Math.random() * n);
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const uid = () => Math.random().toString(36).slice(2, 10);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const params = new URLSearchParams(location.search);
+// per-tab identity in a room, so two tabs on one device are two players (survives reloads)
+const tabStore = {
+  get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+};
+const cleanName = n => String(n || "").replace(/\s+/g, " ").trim().slice(0, 16);
+const cleanWord = s => String(s || "").replace(/\s+/g, " ").trim().slice(0, 24);
+const oneWord = s => !!s && !/\s/.test(s);
+const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ";
+const newCode = () => Array.from({ length: 4 }, () => CODE_CHARS[rnd(CODE_CHARS.length)]).join("");
+const PREFIX = "wordgames-v1-";
+const RTC_OK = typeof RTCPeerConnection !== "undefined" || params.get("net") === "local";
+const NO_RTC = "Rooms don't work in this browser. Open Word Games in Safari or Chrome to start or join a room.";
+
+const DEFAULTS = {
+  one:    { cards: 13 },
+  clover: { rounds: 1 },
+  medium: { rounds: 8 }
+};
+const freshSets = () => JSON.parse(JSON.stringify(DEFAULTS));
+
+/* ================= state ================= */
+let S = null;      // shared game state; the host (or the single phone) is the source of truth
+let ME = null;     // my player id in a room; null when everyone shares one phone
+let ROLE = null;   // 'pass' | 'host' | 'guest'
+const U = {
+  screen: "home", pick: null, err: "", net: "",
+  pp: [],                                       // pass-and-play roster [{id,name}], fresh each visit
+  sets: Object.assign(freshSets(), store.get("wordgames-sets", {})),
+  name: store.get("wordgames-name", ""),
+  joinCode: (params.get("room") || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4),
+  drafts: {}, sheet: null, rev: null, sel: null
+};
+if (U.joinCode) U.screen = "join";
+
+/* ================= words ================= */
+// "The Pizzas!" and "pizza" match; anything smarter is the players' call
+function keyOf(s) {
+  let t = String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/&/g, " and ").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  t = t.replace(/^(the|a|an) /, "");
+  t = t.split(" ").map(w =>
+    w.length > 3 && /ies$/.test(w) ? w.slice(0, -3) + "y" :
+    w.length > 3 && /(ches|shes|sses|xes|zes)$/.test(w) ? w.slice(0, -2) :
+    w.length > 3 && /[^su]s$/.test(w) && !/is$/.test(w) ? w.slice(0, -1) : w).join("");
+  return t || String(s).toLowerCase();
+}
+function makeDeck(kind) {
+  const seen = new Set(store.get("wordgames-seen-" + kind, []));
+  const all = [...WORDS.keys()];
+  const fresh = shuffle(all.filter(i => !seen.has(i)));
+  return fresh.concat(shuffle(all.filter(i => seen.has(i))));
+}
+function markSeen(kind, i) {
+  let s = store.get("wordgames-seen-" + kind, []);
+  if (!s.includes(i)) s.push(i);
+  if (s.length >= WORDS.length) s = [i];
+  store.set("wordgames-seen-" + kind, s);
+}
+// the next word off the deck, skipping any in `not`
+function draw(g, not) {
+  for (let k = 0; k < 20; k++) {
+    const i = g.deck[g.di % g.deck.length]; g.di++;
+    markSeen(g.type, i);
+    if (!not || !not.includes(WORDS[i].w)) return WORDS[i].w;
+  }
+  return WORDS[rnd(WORDS.length)].w;
+}
+
+/* ================= players ================= */
+const player = id => S && S.players.find(p => p.id === id);
+const nm = id => { const p = player(id); return p ? p.name : "?"; };
+const online = id => { const p = player(id); return !!(p && p.on); };
+// may this device act for player `pid`?
+const mine = pid => ROLE === "pass" || ME === pid || (ROLE === "host" && !online(pid));
+const isHostDevice = () => ROLE !== "guest";
+const you = pid => ROLE !== "pass" && ME === pid ? "You" : nm(pid);
+function uniqueName(n) {
+  let base = n || "Player", out = base, k = 2;
+  while (S.players.some(p => p.name.toLowerCase() === out.toLowerCase())) out = base + " " + k++;
+  return out;
+}
+
+/* ================= Just One ================= */
+const joWord = g => WORDS[g.deck[g.di % g.deck.length]];
+const guesserOf = g => g.roster[g.gi % g.roster.length];
+const givers = g => g.roster.filter(p => p !== guesserOf(g));
+const perClue = g => g.roster.length === 2 ? 3 : g.roster.length === 3 ? 2 : 1;
+function joNextWord(g) { g.di++; markSeen("one", g.deck[g.di % g.deck.length]); }
+function joReset(g) { g.clues = {}; g.list = []; g.guess = ""; g.res = null; g.phase = "clue"; }
+function joBuild(g) {
+  const W = joWord(g), wk = keyOf(W.w);
+  const ob = g.roster.length === 2 ? new Set(W.ob.map(keyOf)) : null;
+  const list = [];
+  givers(g).forEach(p => (g.clues[p] || []).forEach(t => list.push({ by: p, t, k: keyOf(t) })));
+  const cnt = {};
+  list.forEach(c => cnt[c.k] = (cnt[c.k] || 0) + 1);
+  list.forEach(c => {
+    c.why = c.k === wk || (c.k.length >= 4 && wk.includes(c.k)) || (wk.length >= 4 && c.k.includes(wk)) ? "word"
+          : cnt[c.k] > 1 ? "same" : ob && ob.has(c.k) ? "obvious" : "";
+    c.x = !!c.why;
+    c.lock = c.why === "same" || c.why === "obvious";   // matches and too-obvious clues stay cancelled
+    delete c.k;
+  });
+  g.list = list; g.phase = "check";
+}
+// what a result does to the pile: a wrong guess also burns the next card
+const joLeftAfter = g => g.res === "wrong" ? g.left - 2 : g.left - 1;
+
+/* ================= So Clover! =================
+   A card has 4 words, one per side: [top, right, bottom, left]. Turned r quarter-turns clockwise,
+   side s shows word (s - r). Slots: 0 top-left, 1 top-right, 2 bottom-right, 3 bottom-left.
+   Leaf L (0 top, 1 right, 2 bottom, 3 left) sits between slots LEAF[L] and touches their side L. */
+const LEAF = [[0, 1], [1, 2], [2, 3], [3, 0]];
+const OUT = [[0, 3], [0, 1], [1, 2], [2, 3]];          // the two sides of each slot that face a leaf
+const faces = (w, r) => [0, 1, 2, 3].map(s => w[(s - r + 4) % 4]);
+const leafWords = (b, L) => LEAF[L].map(s => faces(b.cards[s], b.rot[s])[L]);
+function dealBoard(g) {
+  const used = [];
+  const card = () => { const c = [0, 1, 2, 3].map(() => { const w = draw(g, used); used.push(w); return w; }); return c; };
+  return { cards: [card(), card(), card(), card()], rot: [0, 1, 2, 3].map(() => rnd(4)), decoy: card(), clues: null };
+}
+const pieceWords = (b, c) => c < 4 ? b.cards[c] : b.decoy;
+const author = g => g.queue[g.qi];
+function clSetup(g) {
+  g.pieces = shuffle([0, 1, 2, 3, 4]).map(c => ({ c, r: rnd(4) }));
+  g.slots = [null, null, null, null]; g.locked = [false, false, false, false]; g.ok = [];
+  g.tries = 1; g.right = -1; g.pts = 0; g.phase = "solve";
+}
+function clStart(g) { g.queue = g.roster.slice(); g.qi = 0; clSetup(g); }
+function clCheck(g) {
+  const b = g.boards[author(g)];
+  const ok = g.slots.map((p, s) => g.pieces[p].c === s && g.pieces[p].r === b.rot[s]);
+  const n = ok.filter(Boolean).length;
+  g.ok = ok; g.right = n;
+  if (n === 4 || g.tries === 2) {
+    g.pts = n === 4 ? (g.tries === 1 ? 6 : 3) : 0;
+    g.score += g.pts; g.possible += 6; g.phase = "reveal";
+  } else {
+    g.tries = 2; g.locked = ok;
+    g.slots = g.slots.map((p, s) => ok[s] ? p : null);
+  }
+}
+function clAdvance(g) {
+  g.qi++;
+  if (g.qi < g.queue.length) { clSetup(g); return; }
+  if (g.round < g.rounds) { g.round++; g.boards = {}; g.roster.forEach(p => g.boards[p] = dealBoard(g)); g.phase = "write"; return; }
+  S.stage = "over";
+}
+function clPlace(g, p, s) {
+  if (!(p >= 0 && p < 5 && s >= 0 && s < 4) || g.locked[s]) return;
+  const from = g.slots.indexOf(p);
+  if (from === s || (from > -1 && g.locked[from])) return;
+  const other = g.slots[s];
+  g.slots[s] = p;
+  if (from > -1) g.slots[from] = other;               // swap; otherwise the bumped card goes back to the tray
+}
+const pieceLocked = (g, p) => { const s = g.slots.indexOf(p); return s > -1 && g.locked[s]; };
+
+/* ================= Medium ================= */
+function mdPair(g) {
+  const n = g.roster.length;
+  g.a = g.roster[(g.round - 1) % n]; g.b = g.roster[g.round % n];
+  g.phase = "pickA"; g.pair = []; g.said = {}; g.tries = 1; g.chain = []; g.match = false;
+}
+const onTable = (g, t) => g.pair.some(w => keyOf(w) === keyOf(t));
+function mdReveal(g) {
+  g.match = keyOf(g.said[g.a]) === keyOf(g.said[g.b]);
+  g.chain.push([g.pair[0], g.pair[1]]);
+  g.phase = "reveal";
+}
+const mdPts = g => g.match ? 4 - g.tries : 0;
+const mdRoundOver = g => g.match || g.tries >= 3;
+
+/* ================= game setup ================= */
+const INIT = {
+  one(roster, set) {
+    const g = { type: "one", roster, deck: makeDeck("one"), di: 0, cards: set.cards, left: set.cards, score: 0, gi: 0, round: 1, hist: [] };
+    markSeen("one", g.deck[0]); joReset(g);
+    return g;
+  },
+  clover(roster, set) {
+    const g = { type: "clover", roster, deck: makeDeck("clover"), di: 0, round: 1, rounds: set.rounds, score: 0, possible: 0,
+      phase: "write", boards: {}, queue: [], qi: 0, pieces: [], slots: [], locked: [], ok: [], tries: 1, right: -1, pts: 0 };
+    roster.forEach(p => g.boards[p] = dealBoard(g));
+    return g;
+  },
+  medium(roster, set) {
+    const g = { type: "medium", roster, deck: makeDeck("medium"), di: 0, round: 1, rounds: set.rounds, score: 0, hands: {}, hist: [] };
+    roster.forEach(p => g.hands[p] = [0, 1, 2, 3, 4].map(() => draw(g)));
+    mdPair(g);
+    return g;
+  }
+};
+function startGame() {
+  S.stage = "play";
+  S.g = INIT[S.mode](S.players.map(p => p.id), S.sets[S.mode]);
+}
+
+/* ================= reducer (runs on the host / the single phone) ================= */
+function apply(a, from) {
+  if (!S || !a || typeof a.type !== "string") return;
+  const host = ROLE === "pass" || from === S.hostId;
+  const may = pid => ROLE === "pass" || from === pid || (from === S.hostId && !online(pid));
+  // one of `ids` on this device, or the host covering for them when they're all offline
+  const anyOf = ids => ROLE === "pass" || ids.includes(from) || (from === S.hostId && ids.every(p => !online(p)));
+  const g = S.g;
+  const v = a.v;
+
+  /* ---- lobby / meta ---- */
+  switch (a.type) {
+    case "setMode": if (host && S.stage === "lobby" && MODES[v]) S.mode = v; return;
+    case "set": {
+      if (!host || !S.sets[S.mode] || !(a.k in DEFAULTS[S.mode])) return;
+      S.sets[S.mode][a.k] = Number(v);
+      return;
+    }
+    case "kick": {
+      if (!host || v === S.hostId || S.stage !== "lobby") return;
+      S.players = S.players.filter(p => p.id !== v);
+      const c = Net.conns.get(v); if (c) { try { c.send({ t: "kicked" }); } catch (e) {} setTimeout(() => { try { c.close(); } catch (e) {} }, 200); Net.conns.delete(v); }
+      return;
+    }
+    case "start":
+      if (host && S.stage === "lobby" && S.players.length >= MODES[S.mode].min && S.players.length <= MODES[S.mode].max) startGame();
+      return;
+    case "again": if (host && S.stage === "over") startGame(); return;
+    case "lobby": if (host) { S.stage = "lobby"; S.g = null; } return;
+    case "drop": if (host && g && S.stage === "play") dropPlayer(v); return;
+  }
+  if (!g || S.stage !== "play") return;
+
+  /* ---- JUST ONE ---- */
+  if (g.type === "one") {
+    const gs = guesserOf(g), gv = givers(g), giver = anyOf(gv);
+    switch (a.type) {
+      case "joSkipWord": if (g.phase === "clue" && (giver || may(gs))) { joNextWord(g); joReset(g); } break;
+      case "joClue": {
+        if (g.phase !== "clue" || !gv.includes(v) || !may(v) || g.clues[v]) break;
+        const arr = Array.isArray(a.val) ? a.val.map(cleanWord).filter(oneWord).slice(0, perClue(g)) : [];
+        // an empty list is the host skipping someone who went offline
+        if (arr.length ? arr.length !== perClue(g) : !(from === S.hostId && !online(v))) break;
+        g.clues[v] = arr;
+        if (gv.every(p => g.clues[p])) joBuild(g);
+        break;
+      }
+      case "joToggle": { const c = g.list[Number(v)]; if (g.phase === "check" && giver && c && !c.lock) c.x = !c.x; break; }
+      case "joShow": if (g.phase === "check" && giver) g.phase = "guess"; break;
+      case "joGuess":
+        if (g.phase === "guess" && may(gs)) {
+          const t = cleanWord(a.val);
+          g.guess = t; g.res = !t ? "pass" : keyOf(t) === keyOf(joWord(g).w) ? "right" : "wrong"; g.phase = "result";
+        }
+        break;
+      case "joCount": if (g.phase === "result" && g.res === "wrong" && giver) g.res = "right"; break;
+      case "joNext":
+        if (g.phase === "result") {
+          if (g.res === "right") g.score++;
+          const left = joLeftAfter(g);
+          if (left < 0) g.score = Math.max(0, g.score - 1);   // wrong on the last card costs a point instead
+          g.left = Math.max(0, left);
+          g.hist.push({ w: joWord(g).w, r: g.res });
+          if (g.left <= 0) { S.stage = "over"; break; }
+          g.round++; g.gi++; joNextWord(g); joReset(g);
+        }
+        break;
+    }
+    return;
+  }
+
+  /* ---- SO CLOVER! ---- */
+  if (g.type === "clover") {
+    const au = g.phase === "write" ? null : author(g);
+    const solver = anyOf(g.roster.filter(p => p !== au));
+    switch (a.type) {
+      case "clWrite": {
+        const b = g.boards[v];
+        if (g.phase !== "write" || !b || b.clues || !may(v)) break;
+        const arr = Array.isArray(a.val) ? a.val.map(cleanWord) : [];
+        if (arr.length === 4 && arr.every(oneWord)) {
+          b.clues = arr;
+          if (g.roster.every(p => g.boards[p].clues)) clStart(g);
+        }
+        break;
+      }
+      case "clRedeal": if (g.phase === "write" && g.boards[v] && !g.boards[v].clues && may(v)) g.boards[v] = dealBoard(g); break;
+      case "clPlace": if (g.phase === "solve" && solver) clPlace(g, Number(a.p), Number(a.s)); break;
+      case "clRot": { const p = g.pieces[Number(v)]; if (g.phase === "solve" && solver && p && !pieceLocked(g, Number(v))) p.r = (p.r + 1) % 4; break; }
+      case "clTray": { const s = g.slots.indexOf(Number(v)); if (g.phase === "solve" && solver && s > -1 && !g.locked[s]) g.slots[s] = null; break; }
+      case "clCheck": if (g.phase === "solve" && solver && g.slots.every(x => x != null)) clCheck(g); break;
+      case "clNext": if (g.phase === "reveal") clAdvance(g); break;
+    }
+    return;
+  }
+
+  /* ---- MEDIUM ---- */
+  if (g.type === "medium") {
+    switch (a.type) {
+      case "mdPick": {
+        const who = g.phase === "pickA" ? g.a : g.phase === "pickB" ? g.b : null;
+        const h = g.hands[v], i = Number(a.i);
+        if (!who || v !== who || !may(who) || !h || !(i >= 0 && i < h.length)) break;
+        g.pair.push(h[i]); h.splice(i, 1, draw(g, g.pair));
+        g.phase = g.phase === "pickA" ? "pickB" : "say";
+        break;
+      }
+      case "mdSay": {
+        const t = cleanWord(a.val);
+        if (g.phase !== "say" || (v !== g.a && v !== g.b) || !may(v) || g.said[v] || !t || onTable(g, t)) break;
+        g.said[v] = t;
+        if (g.said[g.a] && g.said[g.b]) mdReveal(g);
+        break;
+      }
+      case "mdBoth": {      // one phone: both words said out loud, typed in afterwards
+        const [x, y] = (Array.isArray(a.val) ? a.val : []).map(cleanWord);
+        if (ROLE !== "pass" || g.phase !== "say" || !x || !y || onTable(g, x) || onTable(g, y)) break;
+        g.said = { [g.a]: x, [g.b]: y }; mdReveal(g);
+        break;
+      }
+      case "mdCount": if (g.phase === "reveal" && !g.match && anyOf(g.roster)) g.match = true; break;
+      case "mdNext":
+        if (g.phase === "reveal") {
+          if (!mdRoundOver(g)) { g.pair = [g.said[g.a], g.said[g.b]]; g.said = {}; g.tries++; g.phase = "say"; break; }
+          g.score += mdPts(g);
+          g.hist.push({ a: g.a, b: g.b, w: g.said[g.a], pts: mdPts(g) });
+          if (g.round >= g.rounds) { S.stage = "over"; break; }
+          g.round++; mdPair(g);
+        }
+        break;
+    }
+  }
+}
+function dropPlayer(pid) {
+  const g = S.g; if (!g.roster.includes(pid)) return;
+  if (g.type === "one") {
+    const gs = guesserOf(g);
+    g.roster = g.roster.filter(p => p !== pid);
+    if (g.roster.length < 2) { S.stage = "over"; return; }
+    if (gs === pid) { g.gi = g.gi % g.roster.length; joReset(g); return; }
+    g.gi = g.roster.indexOf(gs);
+    delete g.clues[pid];
+    g.list = g.list.filter(c => c.by !== pid);
+    if (g.phase === "clue" && givers(g).every(p => g.clues[p])) joBuild(g);
+  } else if (g.type === "clover") {
+    const au = g.phase === "write" ? null : author(g);
+    g.roster = g.roster.filter(p => p !== pid);
+    if (g.roster.length < 2) { S.stage = "over"; return; }
+    if (g.phase === "write") {
+      delete g.boards[pid];
+      if (g.roster.every(p => g.boards[p].clues)) clStart(g);
+      return;
+    }
+    const qi = g.queue.indexOf(pid);
+    if (au === pid) { g.queue.splice(qi, 1); g.qi--; clAdvance(g); }
+    else if (qi > -1) { g.queue.splice(qi, 1); if (qi < g.qi) g.qi--; }
+  } else if (g.type === "medium") {
+    g.roster = g.roster.filter(p => p !== pid);
+    delete g.hands[pid];
+    if (g.roster.length < 2) { S.stage = "over"; return; }
+    if (pid === g.a || pid === g.b) mdPair(g);
+  }
+}
+
+/* ================= networking =================
+   Rooms are peer-to-peer (WebRTC via PeerJS). The host's phone holds the game;
+   everyone else sends actions to it and receives the updated state.            */
+const Net = { peer: null, conn: null, conns: new Map(), code: null, lost: false, retrying: false };
+
+class Emitter { constructor() { this.h = {}; } on(e, f) { (this.h[e] = this.h[e] || []).push(f); return this; } emit(e, ...a) { (this.h[e] || []).forEach(f => f(...a)); } }
+// Same-browser stand-in for PeerJS (?net=local): lets several tabs play a room with no internet.
+const BUS = ("BroadcastChannel" in window) ? new BroadcastChannel("wordgames-local-net") : null;
+class FakeConn extends Emitter {
+  constructor(peer, remote, cid) { super(); this.peer = peer; this.remote = remote; this.cid = cid; this.open = false; }
+  send(d) { BUS.postMessage({ k: "d", to: this.remote, from: this.peer.id, cid: this.cid, d: JSON.parse(JSON.stringify(d)) }); }
+  close() { if (!this.open) return; this.open = false; BUS.postMessage({ k: "x", to: this.remote, from: this.peer.id, cid: this.cid }); this.emit("close"); }
+}
+class FakePeer extends Emitter {
+  constructor(id) {
+    super(); this.id = typeof id === "string" ? id : "anon-" + uid(); this.conns = {};
+    this.onmsg = ev => this.recv(ev.data); BUS.addEventListener("message", this.onmsg);
+    setTimeout(() => this.emit("open", this.id), 20);
+  }
+  recv(m) {
+    if (m.to !== this.id) return;
+    const c = this.conns[m.cid];
+    if (m.k === "c") {
+      const nc = new FakeConn(this, m.from, m.cid); this.conns[m.cid] = nc; nc.open = true;
+      this.emit("connection", nc); BUS.postMessage({ k: "a", to: m.from, from: this.id, cid: m.cid });
+      setTimeout(() => nc.emit("open"), 0);
+    } else if (m.k === "a" && c) { clearTimeout(c.t); c.open = true; c.emit("open"); }
+    else if (m.k === "d" && c && c.open) c.emit("data", m.d);
+    else if (m.k === "x" && c && c.open) { c.open = false; c.emit("close"); }
+  }
+  connect(id) {
+    const cid = uid(), c = new FakeConn(this, id, cid); this.conns[cid] = c;
+    BUS.postMessage({ k: "c", to: id, from: this.id, cid });
+    c.t = setTimeout(() => this.emit("error", { type: "peer-unavailable" }), 1500);
+    return c;
+  }
+  reconnect() {}
+  destroy() { Object.values(this.conns).forEach(c => c.close()); BUS.removeEventListener("message", this.onmsg); }
+}
+async function loadPeer() {
+  if (params.get("net") === "local" && BUS) return FakePeer;
+  if (window.Peer) return window.Peer;
+  await new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js";
+    s.onload = res; s.onerror = () => rej(new Error("Couldn't load online rooms. Check your internet connection."));
+    document.head.appendChild(s);
+  });
+  return window.Peer;
+}
+function peerOpts() {
+  const h = params.get("peerhost");               // for local testing against a self-hosted PeerServer
+  if (!h) return { debug: 0 };
+  const [host, port] = h.split(":");
+  return { host, port: Number(port) || 9000, path: "/", secure: location.protocol === "https:", debug: 0 };
+}
+function hostRoom(code, keepCode, tries = 0) {
+  return loadPeer().then(P => new Promise((res, rej) => {
+    let opened = false;
+    const peer = new P(PREFIX + code, peerOpts());
+    peer.on("open", () => { opened = true; Net.peer = peer; Net.code = code; res(code); });
+    peer.on("error", e => {
+      if (!opened) {
+        try { peer.destroy(); } catch (x) {}
+        if (e.type === "unavailable-id" && !keepCode) hostRoom(newCode()).then(res, rej);
+        else if (e.type === "unavailable-id" && tries < 6) setTimeout(() => hostRoom(code, true, tries + 1).then(res, rej), 3000);
+        else if (e.type === "unavailable-id") rej(new Error("Room " + code + " is still in use. Try again in a minute, or start a new room."));
+        else rej(new Error(e.type === "browser-incompatible" ? NO_RTC : "Couldn't open a room (" + (e.type || e.message) + ")."));
+      }
+    });
+    peer.on("disconnected", () => { setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch (x) {} }, 1000); });
+    peer.on("connection", conn => {
+      conn.on("data", d => hostRecv(conn, d));
+      conn.on("close", () => {
+        if (conn.pid && Net.conns.get(conn.pid) === conn) {
+          Net.conns.delete(conn.pid);
+          const p = player(conn.pid); if (p) { p.on = false; commit(); }
+        }
+      });
+      conn.on("error", () => {});
+    });
+  }));
+}
+function hostRecv(conn, d) {
+  if (!S || !d || typeof d !== "object") return;
+  if (d.t === "join") {
+    const pid = String(d.pid || "").slice(0, 24) || uid();
+    let p = player(pid);
+    if (!p) {
+      if (S.players.length >= 16) { conn.send({ t: "err", msg: "That room is full." }); return; }
+      p = { id: pid, name: uniqueName(cleanName(d.name) || "Player"), on: true };
+      S.players.push(p);
+    }
+    p.on = true; conn.pid = pid;
+    const old = Net.conns.get(pid);
+    Net.conns.set(pid, conn);
+    if (old && old !== conn) { try { old.close(); } catch (e) {} }
+    conn.send({ t: "hello", pid });
+    commit();
+  } else if (d.t === "act" && conn.pid) { apply(d.a, conn.pid); commit(); }
+  else if (d.t === "bye" && conn.pid) {
+    if (S.stage === "lobby") S.players = S.players.filter(p => p.id !== conn.pid);
+    else { const p = player(conn.pid); if (p) p.on = false; }
+    Net.conns.delete(conn.pid); commit();
+  }
+}
+function joinRoom(code, name) {
+  const pid = tabStore.get("wordgames-pid-" + code) || uid();
+  return loadPeer().then(P => new Promise((res, rej) => {
+    let done = false;
+    const peer = new P(peerOpts());
+    const fail = msg => { if (done) return; done = true; clearTimeout(timer); try { peer.destroy(); } catch (e) {} rej(new Error(msg)); };
+    const timer = setTimeout(() => fail("Couldn't reach room " + code + ". Is the host's screen still open?"), 15000);
+    peer.on("error", e => {
+      if (!done) fail(e.type === "peer-unavailable" ? "No room called " + code + ". Check the code, or ask the host to keep Word Games open."
+        : e.type === "browser-incompatible" ? NO_RTC : "Couldn't connect (" + (e.type || e.message) + ").");
+    });
+    peer.on("open", () => {
+      const conn = peer.connect(PREFIX + code, { reliable: true });
+      conn.on("open", () => conn.send({ t: "join", pid, name }));
+      conn.on("data", d => {
+        if (!d) return;
+        if (d.t === "hello") {
+          ME = d.pid; ROLE = "guest"; tabStore.set("wordgames-pid-" + code, d.pid);
+          if (!done) { done = true; clearTimeout(timer); if (Net.peer && Net.peer !== peer) { try { Net.peer.destroy(); } catch (e) {} } Net.peer = peer; Net.conn = conn; Net.code = code; Net.lost = false; res(); }
+        } else if (d.t === "state") { S = d.S; Net.lost = false; saveLocal(); render(); }
+        else if (d.t === "err") fail(d.msg);
+        else if (d.t === "kicked") { goHome("The host removed you from the room."); }
+        else if (d.t === "closed") { goHome("The host closed the room."); }
+      });
+      conn.on("close", () => {
+        if (!done || Net.conn !== conn || ROLE !== "guest") return;
+        Net.lost = true; render();
+        if (!Net.retrying) { Net.retrying = true; setTimeout(() => { Net.retrying = false; if (Net.lost) reconnect(true); }, 1500); }
+      });
+    });
+  }));
+}
+function reconnect(quiet) {
+  if (ROLE !== "guest" || !Net.code) return;
+  const me = player(ME);
+  joinRoom(Net.code, me ? me.name : U.name).then(() => { if (!quiet) toast("Reconnected"); render(); })
+    .catch(e => { if (!quiet) toast(e.message); render(); });
+}
+function broadcast() {
+  if (ROLE !== "host") return;
+  for (const [, c] of Net.conns) { if (c.open) { try { c.send({ t: "state", S }); } catch (e) {} } }
+}
+function commit() {
+  if (!S) return;
+  S.v = (S.v || 0) + 1;
+  saveLocal(); broadcast(); render();
+}
+function act(a) {
+  if (ROLE === "guest") {
+    if (Net.conn && Net.conn.open && !Net.lost) Net.conn.send({ t: "act", a });
+    else toast("Not connected. Tap Reconnect.");
+    return;
+  }
+  apply(a, ME); commit();
+}
+function saveLocal() {
+  if (!S) return;
+  if (ROLE === "guest") store.set("wordgames-save", { role: "guest", code: Net.code, mode: S.mode, t: Date.now() });
+  else store.set("wordgames-save", { role: ROLE, S, me: ME, t: Date.now() });
+}
+function teardown() {
+  if (ROLE === "host") { for (const [, c] of Net.conns) { try { c.send({ t: "closed" }); } catch (e) {} } }
+  if (ROLE === "guest" && Net.conn) { try { Net.conn.send({ t: "bye" }); } catch (e) {} }
+  const p = Net.peer;
+  setTimeout(() => { try { p && p.destroy(); } catch (e) {} }, 150);
+  Net.peer = null; Net.conn = null; Net.conns = new Map(); Net.code = null; Net.lost = false;
+}
+function goHome(msg) {
+  teardown(); store.del("wordgames-save");
+  S = null; ME = null; ROLE = null; U.sheet = null; U.rev = null; U.sel = null; U.screen = "home";
+  render(); if (msg) toast(msg);
+}
+
+/* ================= views: pieces ================= */
+const modeCard = k => {
+  const m = MODES[k];
+  return `<button class="mode" style="--mc:${m.color}" data-a="pick" data-v="${k}">
+    <span class="swatch"></span><span class="blob"></span>
+    <span class="name">${m.name}</span>
+    <span class="pitch">${m.pitch}</span>
+    <span class="ppl">${m.ppl}</span>
+  </button>`;
+};
+const rulesBlock = k => `<ol class="rules">${MODES[k].rules.map(r => `<li><span>${r}</span></li>`).join("")}</ol>`;
+const wait = t => `<div class="wait">${t}</div>`;
+const hint = t => `<p class="hint">${t}</p>`;
+const seg = (k, opts, cur, editable) => `<div class="seg" role="group">${opts.map(o =>
+  `<button data-a="set" data-k="${k}" data-v="${o}" aria-pressed="${String(o) === String(cur)}" ${editable ? "" : "disabled"}>${o}</button>`).join("")}</div>`;
+function settingsBlock(mode, set, editable, count) {
+  let row, note = "";
+  if (mode === "one") {
+    row = ["Cards", seg("cards", [7, 13, 20], set.cards, editable)];
+    note = count === 2 ? "Two players: 3 clues each, and too-obvious clues get cancelled."
+         : count === 3 ? "Three players: 2 clues each." : "";
+  } else if (mode === "clover") {
+    row = ["Rounds", seg("rounds", [1, 2, 3], set.rounds, editable)];
+    note = "Each round, everyone makes a clover and the others solve it.";
+  } else {
+    row = ["Rounds", seg("rounds", [6, 8, 12], set.rounds, editable)];
+    note = "Each round, the next two players try to meet in the middle.";
+  }
+  return `<div class="stack"><div class="row wrap"><span class="eyebrow grow">${row[0]}</span>${row[1]}</div>${note ? `<div class="faint small">${note}</div>` : ""}</div>`;
+}
+function topbar(info) {
+  const bar = `<div class="gtop"><span class="mchip">${MODES[S.mode].name}</span><span class="info">${info}</span>
+    <button class="icon-btn" data-a="rules" aria-label="Rules">?</button><button class="icon-btn" data-a="menu" aria-label="Menu">⋯</button></div>`;
+  return bar + netbar();
+}
+function netbar() {
+  if (ROLE === "guest" && Net.lost) return `<div class="netbar"><span class="grow">Lost connection to the host.</span><button class="ghost" data-a="reconnect">Reconnect</button></div>`;
+  if (ROLE === "host" && S.g) {
+    const off = S.g.roster.filter(p => !online(p) && p !== ME);
+    if (off.length) return `<div class="netbar"><span class="grow">${off.map(nm).map(esc).join(", ")} ${off.length > 1 ? "are" : "is"} offline. You can play their turns, or remove them in ⋯.</span></div>`;
+  }
+  return "";
+}
+function handoff(to, sub, warn) {
+  return `<div class="handoff"><div class="lbl">${sub || "Pass the phone to"}</div><div class="to">${esc(to)}</div>${warn ? `<div class="warn">${warn}</div>` : ""}</div>`;
+}
+const spectator = () => wait("You joined mid-game. You'll be dealt in next game.");
+const inGame = () => ROLE === "pass" || S.g.roster.includes(ME);
+const promptCard = inner => `<div class="prompt">${inner}</div>`;
+const statusChips = (ids, done) => `<div class="chips">${ids.map(p => `<span class="chip ${done(p) ? "done" : ""}">${done(p) ? "✓ " : ""}${esc(nm(p))}</span>`).join("")}</div>`;
+function hostHelp(pids, type, label) {
+  if (ROLE !== "host") return "";
+  const off = pids.filter(p => !online(p));
+  if (!off.length) return "";
+  return `<div class="row wrap"><span class="faint small grow">Offline:</span>${off.map(p => `<button class="ghost" data-a="${type}" data-v="${p}">${label || "Skip"} ${esc(nm(p))}</button>`).join("")}</div>`;
+}
+// one-phone privacy: a screen stays covered until the right person says it's them
+const revKey = x => `${S.g.round}|${S.g.qi || 0}|${S.g.phase}|${x}`;
+const revealed = x => U.rev === revKey(x);
+const showBtn = (x, label) => `<div class="bottom"><button class="cta" data-a="reveal" data-v="${esc(x)}">${label}</button></div>`;
+const roleBar = (icon, label, pid) => `<div class="capbar"><span class="crown" aria-hidden="true">${icon}</span><div class="grow">
+  <div class="eyebrow">${label}</div><div class="capname">${esc(you(pid))}</div></div></div>`;
+
+/* ================= views: screens ================= */
+function homeView() {
+  const sv = store.get("wordgames-save", null);
+  const resumable = sv && Date.now() - sv.t < 12 * 3600e3 && (sv.role === "guest" ? sv.code : sv.S);
+  const resumeMode = resumable ? (sv.role === "guest" ? sv.mode : sv.S.mode) : null;
+  return `<section class="screen">
+    <div class="brand"><h1>Word <i>Games</i></h1>
+      <div class="ko">Three co-op word games for 2 players or a crowd</div></div>
+    ${resumable ? `<button class="cta alt" data-a="resume">Resume ${MODES[resumeMode] ? MODES[resumeMode].name : ""} ${sv.role === "pass" ? "game" : "room"}<span class="sub">${sv.role === "guest" ? "Rejoin room " + esc(sv.code) : sv.role === "host" ? "Reopen your room " + esc(sv.S.code) : "Pick up where you left off"}</span></button>` : ""}
+    <div class="eyebrow">Pick a game</div>
+    <div class="modes">${Object.keys(MODES).map(modeCard).join("")}</div>
+    <div class="bottom"><button class="cta alt" data-a="goJoin">Join a room<span class="sub">Got a 4-letter code from a friend?</span></button></div>
+  </section>`;
+}
+function modeView() {
+  const k = U.pick, m = MODES[k];
+  return `<section class="screen">
+    <button class="topback" data-a="home">← All games</button>
+    <div><div class="display" style="font-size:clamp(46px,15vw,76px);color:var(--accent)">${m.name}</div></div>
+    <div class="dim" style="font-size:16px;line-height:1.4">${m.pitch}</div>
+    <div class="card stack"><div class="eyebrow">How to play</div>${rulesBlock(k)}</div>
+    <div class="bottom">
+      <button class="cta" data-a="goSetup">Play on one phone<span class="sub">Pass it around</span></button>
+      <button class="cta alt" data-a="goHost" ${RTC_OK ? "" : "disabled"}>Start a room<span class="sub">Everyone plays on their own phone</span></button>
+      ${RTC_OK ? "" : `<div class="faint small center">${NO_RTC}</div>`}
+    </div>
+  </section>`;
+}
+function setupView() {
+  const k = U.pick, m = MODES[k], set = U.sets[k], pp = U.pp;
+  const enough = pp.length >= m.min, tooMany = pp.length > m.max;
+  return `<section class="screen">
+    <button class="topback" data-a="pick" data-v="${k}">← ${m.name} rules</button>
+    <div class="row"><h2 class="display grow" style="font-size:34px">Who's playing?</h2></div>
+    <div class="row"><input class="inp grow" id="newname" maxlength="16" placeholder="Add a name" autocomplete="off" enterkeyhint="done" value="${esc(U.drafts.newname || "")}">
+      <button class="ghost on" data-a="addName" style="padding:15px 18px">Add</button></div>
+    <div class="plist">${pp.map(p => `<div class="p"><span class="nm">${esc(p.name)}</span>
+      <button class="x" data-a="rmName" data-v="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></div>`).join("") || `<div class="faint small center">Add at least ${m.min} players.</div>`}</div>
+    <div class="card">${settingsBlock(k, set, true, pp.length)}</div>
+    <div class="bottom">
+      ${tooMany ? `<div class="err">${m.name} supports up to ${m.max} players.</div>` : ""}
+      <button class="cta" data-a="startPass" ${enough && !tooMany ? "" : "disabled"}>${enough ? "Start " + m.name : `Need ${m.min - pp.length} more`}</button>
+    </div>
+  </section>`;
+}
+function hostView() {
+  const m = MODES[U.pick];
+  return `<section class="screen">
+    <button class="topback" data-a="pick" data-v="${U.pick}">← ${m.name} rules</button>
+    <h2 class="display" style="font-size:38px">Start a room</h2>
+    <div class="dim">You'll get a 4-letter code. Friends open this page on their phones and type it in. Keep this screen open while you play: your phone runs the game.</div>
+    <div class="field"><label for="hostname">Your name</label><input class="inp" id="hostname" maxlength="16" autocomplete="off" value="${esc(U.drafts.hostname ?? U.name)}" placeholder="Your name"></div>
+    ${U.err ? `<div class="err">${esc(U.err)}</div>` : ""}
+    <div class="bottom"><button class="cta" data-a="createRoom">Create ${m.name} room</button></div>
+  </section>`;
+}
+function joinView() {
+  return `<section class="screen">
+    <button class="topback" data-a="home">← Back</button>
+    <h2 class="display" style="font-size:38px">Join a room</h2>
+    <div class="field"><label for="joincode">Room code</label><input class="inp code" id="joincode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" value="${esc(U.drafts.joincode ?? U.joinCode)}" placeholder="ABCD"></div>
+    <div class="field"><label for="joinname">Your name</label><input class="inp" id="joinname" maxlength="16" autocomplete="off" value="${esc(U.drafts.joinname ?? U.name)}" placeholder="Your name"></div>
+    ${U.err ? `<div class="err">${esc(U.err)}</div>` : ""}
+    <div class="bottom">${RTC_OK ? "" : `<div class="err">${NO_RTC}</div>`}<button class="cta" data-a="joinRoom" ${RTC_OK ? "" : "disabled"}>Join</button></div>
+  </section>`;
+}
+function connectingView() {
+  return `<section class="screen" style="justify-content:center">${wait(esc(U.net || "Connecting…"))}
+    <button class="link" data-a="home">Cancel</button></section>`;
+}
+function lobbyView() {
+  const m = MODES[S.mode], set = S.sets[S.mode], host = ROLE === "host";
+  const n = S.players.length, enough = n >= m.min, tooMany = n > m.max;
+  return `<section class="screen">
+    <div class="gtop"><span class="eyebrow grow">Room code</span><button class="ghost" data-a="share">Share invite</button>${host ? `<button class="ghost" data-a="closeRoom">Close</button>` : `<button class="ghost" data-a="leave">Leave</button>`}</div>
+    <div class="room-code">${esc(S.code)}</div>
+    <div class="faint small center">Others join by opening this page and tapping <b>Join a room</b>.</div>
+    ${netbar()}
+    <div class="card tint stack">
+      <div class="row"><div class="grow"><div class="eyebrow">Tonight's game</div><div class="display" style="font-size:36px;color:var(--accent)">${m.name}</div></div>
+        ${host ? `<button class="ghost" data-a="modePick">Change</button>` : ""}</div>
+      <div class="dim" style="line-height:1.4">${m.pitch}</div>
+      <hr class="sep"><div class="eyebrow">Quick rules</div>${rulesBlock(S.mode)}
+    </div>
+    <div class="row"><span class="eyebrow grow">Players (${n})</span></div>
+    <div class="plist">${S.players.map(p => `<div class="p"><span class="dot ${p.on ? "" : "off"}"></span>
+      <span class="nm">${esc(p.name)} ${p.id === S.hostId ? "👑" : ""} ${p.id === ME ? `<span class="you">(you)</span>` : ""}</span>
+      ${host && p.id !== S.hostId ? `<button class="x" data-a="kick" data-v="${p.id}" aria-label="Remove ${esc(p.name)}">×</button>` : ""}</div>`).join("")}</div>
+    <div class="card">${settingsBlock(S.mode, set, host, n)}</div>
+    <div class="bottom">
+      ${tooMany ? `<div class="err">${m.name} supports up to ${m.max} players. Remove someone or pick another game.</div>` : ""}
+      ${host ? `<button class="cta" data-a="start" ${enough && !tooMany ? "" : "disabled"}>${enough ? "Start " + m.name : `Waiting for ${m.min - n} more player${m.min - n > 1 ? "s" : ""}`}</button>`
+             : wait(`Waiting for ${esc(nm(S.hostId))} to start`)}
+    </div>
+  </section>`;
+}
+
+/* ---------- JUST ONE ---------- */
+const WHY = { same: "Matched", word: "Too close", obvious: "Too obvious", "": "Cancelled" };
+function clueList(g, editable) {
+  return `<div class="clues">${g.list.map((c, i) => {
+    const tag = c.x ? `<span class="why">${WHY[c.why]}</span>` : "";
+    const inner = `<span class="t">${esc(c.t)}</span>${tag}<span class="by">${esc(nm(c.by))}</span>`;
+    return editable && !c.lock
+      ? `<button class="clue ${c.x ? "off" : ""}" data-a="joToggle" data-v="${i}" aria-pressed="${c.x}" aria-label="${esc(c.t)}${c.x ? ", cancelled. Tap to keep it." : ". Tap to cancel it."}">${inner}</button>`
+      : `<div class="clue ${c.x ? "off" : ""}">${inner}</div>`;
+  }).join("") || `<div class="faint center">No clues this time.</div>`}</div>`;
+}
+function oneView() {
+  const g = S.g, W = joWord(g), gs = guesserOf(g), gv = givers(g), k = perClue(g);
+  let h = topbar(`Card ${g.round} · ${g.left} left · ${g.score} ✓`);
+  if (!inGame()) return h + spectator();
+  const wordCard = promptCard(`<div class="eyebrow">Mystery word</div><div class="t">${esc(W.w)}</div>`);
+  const pass = ROLE === "pass";
+  const isG = !pass && ME === gs, isGiver = pass || gv.includes(ME);
+  const skipOffline = hostHelp(gv.filter(p => !g.clues[p]), "joSkipClue");
+
+  if (g.phase === "clue") {
+    const done = gv.filter(p => g.clues[p]).length;
+    const form = pid => {
+      const inputs = Array.from({ length: k }, (_, i) => `<div class="inrow">${k > 1 ? `<span class="n">${i + 1}</span>` : ""}<input class="inp big" id="jc-${pid}-${i}" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="${i < k - 1 ? "next" : "done"}" placeholder="${k > 1 ? "Clue " + (i + 1) : "Your clue"}" value="${esc(U.drafts[`jc-${pid}-${i}`] || "")}" aria-label="Clue ${i + 1}"></div>`).join("");
+      return wordCard + hint(`Write ${k === 1 ? "a one-word clue" : k + " one-word clues"} for <b>${esc(you(gs))}</b>. ${g.roster.length === 2 ? "Clues that are too obvious get cancelled, so get creative." : "If your clue matches someone else's, both are cancelled."}`)
+        + `<div class="stack">${inputs}</div>`
+        + `<div class="bottom"><button class="cta" data-a="joClue" data-v="${pid}">Lock in</button>
+           <button class="link" data-a="joSkipWord">Don't know this word? Skip it</button></div>`;
+    };
+    if (pass) {
+      const next = gv.find(p => !g.clues[p]);
+      if (!revealed(next)) return h + handoff(nm(next), "Pass the phone to", `<b>${esc(nm(gs))}</b> is guessing this round, so they mustn't see.`)
+        + showBtn(next, `I'm ${esc(nm(next))}. Show the word`) + `<div class="faint small center">${done}/${gv.length} clues in</div>`;
+      return h + form(next);
+    }
+    if (isG) return h + roleBar("🤔", "Guessing this round", gs) + wait(`The others are writing clues (${done}/${gv.length})`) + statusChips(gv, p => g.clues[p]) + skipOffline;
+    if (g.clues[ME]) return h + wordCard + wait(`Waiting for everyone's clues (${done}/${gv.length})`) + statusChips(gv, p => g.clues[p]) + skipOffline;
+    return h + form(ME);
+  }
+  if (g.phase === "check") {
+    const body = wordCard + hint(`Crossed-out clues are cancelled. Tap any clue that's too close to the word or to another clue (same word family, a misspelling) to cancel it too.`)
+      + clueList(g, true)
+      + `<div class="bottom"><button class="cta" data-a="joShow">${pass ? `Hide these, pass to ${esc(nm(gs))}` : `Show ${esc(nm(gs))} the clues`}</button></div>`;
+    if (pass) {
+      if (!revealed("check")) return h + handoff("Clue-givers", "Check the clues together", `<b>${esc(nm(gs))}</b>, look away!`) + showBtn("check", "Show the clues");
+      return h + body;
+    }
+    if (isG) return h + roleBar("🤔", "Guessing this round", gs) + wait("The others are checking the clues");
+    return h + body;
+  }
+  const kept = g.list.filter(c => !c.x), gone = g.list.length - kept.length;
+  const board = `<div class="gclues">${kept.map(c => `<span class="gclue">${esc(c.t)}</span>`).join("") || `<div class="faint">Every clue was cancelled!</div>`}</div>`
+    + (gone ? `<div class="faint small center">${gone} clue${gone > 1 ? "s were" : " was"} cancelled</div>` : "");
+  if (g.phase === "guess") {
+    if (pass && !revealed(gs)) return h + handoff(nm(gs), "Pass the phone to", "Your clues are ready.") + showBtn(gs, `I'm ${esc(nm(gs))}. Show my clues`);
+    if (pass || isG || (ROLE === "host" && !online(gs))) {
+      return h + roleBar("🤔", "Your clues", gs) + board
+        + `<input class="inp big" id="jg" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" placeholder="Your guess" value="${esc(U.drafts.jg || "")}" aria-label="Your guess">`
+        + `<div class="bottom"><button class="cta" data-a="joGuess">Guess</button><button class="cta alt" data-a="joPass">Pass<span class="sub">Lose this card, but not the next one</span></button></div>`;
+    }
+    return h + wordCard + clueList(g, false) + wait(`${esc(nm(gs))} is guessing`);
+  }
+  if (g.phase === "result") {
+    const end = joLeftAfter(g) <= 0;
+    const banner = g.res === "right" ? `<div class="banner good"><span class="big">Got it!</span>+1 card</div>`
+      : g.res === "pass" ? `<div class="banner neutral"><span class="big">Passed</span>This card is lost</div>`
+      : `<div class="banner bad"><span class="big">Not quite</span>${esc(nm(gs))} guessed “${esc(g.guess)}”. This card and the next one are lost.</div>`;
+    return h + wordCard + banner + clueList(g, false)
+      + `<div class="bottom">${g.res === "wrong" && isGiver ? `<button class="ghost" data-a="joCount">It's the same word, count it</button>` : ""}
+         <button class="cta" data-a="joNext">${end ? "See how you did" : "Next card"}</button></div>`;
+  }
+  return h;
+}
+
+/* ---------- SO CLOVER! ---------- */
+function cardHtml(w, r, o = {}) {
+  const f = faces(w, r), hot = o.slot != null ? OUT[o.slot] : [];
+  const words = f.map((x, s) => `<span class="cw s${s} ${hot.includes(s) ? "hot" : ""}">${esc(x)}</span>`).join("");
+  const cls = ["ccard", o.act ? "act" : "", o.sel ? "sel" : "", o.cls || ""].join(" ");
+  const tap = o.act ? `data-a="clPick" data-v="${o.p}" role="button" tabindex="0" aria-label="Card: ${f.map(esc).join(", ")}${o.sel ? " (selected)" : ""}"` : "";
+  return `<div class="${cls}" ${tap}>${words}${o.rot ? `<button class="rot" data-a="clRot" data-v="${o.p}" aria-label="Turn this card">↻</button>` : ""}${o.mark || ""}</div>`;
+}
+function cloverHtml(leaves, slots) {
+  return `<div class="clover">${leaves.map((t, L) => `<div class="leaf l${L} ${t.q ? "q" : ""}">${esc(t.t)}</div>`).join("")}
+    <div class="slots">${slots.join("")}</div></div>`;
+}
+function cloverView() {
+  const g = S.g, pass = ROLE === "pass";
+  let h = topbar(`${g.rounds > 1 ? `Round ${g.round}/${g.rounds} · ` : ""}${g.score} pts`);
+  if (!inGame()) return h + spectator();
+
+  if (g.phase === "write") {
+    const done = g.roster.filter(p => g.boards[p].clues).length;
+    const form = pid => {
+      const b = g.boards[pid];
+      const leaves = [0, 1, 2, 3].map(L => ({ t: U.drafts[`cl-${pid}-${L}`] || String(L + 1), q: !U.drafts[`cl-${pid}-${L}`] }));
+      const slots = b.cards.map((w, s) => cardHtml(w, b.rot[s], { slot: s }));
+      const rows = [0, 1, 2, 3].map(L => { const [x, y] = leafWords(b, L);
+        return `<div class="field"><div class="leafrow"><span class="leafno">${L + 1}</span><span class="pairlbl"><b>${esc(x)}</b> + <b>${esc(y)}</b></span></div>
+          <input class="inp" id="cl-${pid}-${L}" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="${L < 3 ? "next" : "done"}" placeholder="One word that links them" value="${esc(U.drafts[`cl-${pid}-${L}`] || "")}" aria-label="Leaf ${L + 1}: ${esc(x)} and ${esc(y)}"></div>`; }).join("");
+      return hint(`Your secret clover. Each leaf touches the two dark words beside it. Write one word per leaf that links them.`)
+        + cloverHtml(leaves, slots) + `<div class="stack">${rows}</div>`
+        + `<div class="bottom"><button class="cta" data-a="clWrite" data-v="${pid}">Lock in my clues</button>
+           <button class="link" data-a="clRedeal" data-v="${pid}">These words are impossible. Deal new ones</button></div>`;
+    };
+    if (pass) {
+      const next = g.roster.find(p => !g.boards[p].clues);
+      if (!revealed(next)) return h + handoff(nm(next), "Pass the phone to", "Everyone else, look away. Your clover is secret.")
+        + showBtn(next, `I'm ${esc(nm(next))}. Show my clover`) + `<div class="faint small center">${done}/${g.roster.length} clovers done</div>`;
+      return h + form(next);
+    }
+    if (g.boards[ME].clues) return h + wait(`Waiting for everyone's clovers (${done}/${g.roster.length})`) + statusChips(g.roster, p => g.boards[p].clues)
+      + (ROLE === "host" && g.roster.some(p => !g.boards[p].clues && !online(p)) ? `<div class="faint small">Someone's offline? Remove them from the game in ⋯.</div>` : "");
+    return h + form(ME);
+  }
+
+  const au = author(g), b = g.boards[au], meAu = !pass && ME === au;
+  const leaves = b.clues.map(t => ({ t }));
+  const head = `<div class="row"><div class="grow"><div class="eyebrow">Clover ${g.qi + 1} of ${g.queue.length}</div>
+    <div class="capname">${meAu ? "Your clover" : esc(nm(au)) + "'s clover"}</div></div></div>`;
+
+  if (g.phase === "solve") {
+    const can = pass || (!meAu && g.roster.includes(ME)) || (ROLE === "host" && g.roster.filter(p => p !== au).every(p => !online(p)));
+    const sel = can ? U.sel : null;
+    const slots = g.slots.map((p, s) => {
+      if (p == null) return `<button class="cslot ${sel != null ? "target" : ""}" data-a="clSlot" data-v="${s}" ${can ? "" : "disabled"} aria-label="Empty spot ${s + 1}">${sel != null ? "Put it here" : ""}</button>`;
+      const pc = g.pieces[p], lock = g.locked[s];
+      return cardHtml(pieceWords(b, pc.c), pc.r, { slot: s, p, act: can && !lock, sel: sel === p, rot: can && !lock && sel === p, cls: lock ? "lock" : "" });
+    });
+    const tray = g.pieces.map((pc, p) => g.slots.includes(p) ? "" : cardHtml(pieceWords(b, pc.c), pc.r, { p, act: can, sel: sel === p, rot: can && sel === p })).join("");
+    h += head;
+    h += g.tries === 2 ? `<div class="banner neutral"><span class="big">${g.right} of 4 right</span>Those stay put (green). Last try for 3 points!</div>`
+       : hint(meAu ? `Stay silent! The others are rebuilding your clover.` : `${pass ? `<b>${esc(nm(au))}</b> stays silent. ` : ""}Tap a card, then tap a spot. Tap ↻ on the picked-up card to turn it. One card is a decoy.`);
+    h += cloverHtml(leaves, slots);
+    if (tray) h += `<div class="eyebrow">Cards</div><div class="tray">${tray}</div>`;
+    if (can) {
+      h += `<div class="bottom">${sel != null && g.slots.includes(sel) ? `<button class="ghost" data-a="clTray" data-v="${sel}">Take that card off the clover</button>` : ""}
+        <button class="cta" data-a="clCheck" ${g.slots.every(x => x != null) ? "" : "disabled"}>${g.tries === 1 ? "Check" : "Final check"}</button></div>`;
+    } else if (!meAu) h += wait("The others are solving");
+    return h;
+  }
+  if (g.phase === "reveal") {
+    const slots = b.cards.map((w, s) => cardHtml(w, b.rot[s], { slot: s, cls: g.ok[s] ? "ok" : "bad" }));
+    h += head + cloverHtml(leaves, slots);
+    h += g.pts === 6 ? `<div class="banner good"><span class="big">+6</span>Perfect on the first try!</div>`
+       : g.pts === 3 ? `<div class="banner good"><span class="big">+3</span>Solved on the second try</div>`
+       : `<div class="banner bad"><span class="big">0</span>${g.right} of 4 in the end. Here's how it really goes.</div>`;
+    const last = g.qi + 1 >= g.queue.length && g.round >= g.rounds;
+    h += `<div class="bottom"><button class="cta" data-a="clNext">${last ? "See how you did" : g.qi + 1 >= g.queue.length ? "Next round" : "Next clover"}</button></div>`;
+    return h;
+  }
+  return h;
+}
+
+/* ---------- MEDIUM ---------- */
+function pairHtml(g, sub) {
+  const pw = i => g.pair[i] != null ? `<div class="pw">${esc(g.pair[i])}${sub ? `<small>${esc(nm(i ? g.b : g.a))}</small>` : ""}</div>`
+    : `<div class="pw q">?<small>${esc(nm(i ? g.b : g.a))}</small></div>`;
+  return `<div class="pair">${pw(0)}<span class="plus">+</span>${pw(1)}</div>`;
+}
+const triesHtml = g => `<div class="tries" aria-label="Try ${g.tries} of 3">${[1, 2, 3].map(i => `<i class="${i <= g.tries ? "on" : ""}"></i>`).join("")}</div>`;
+function mediumView() {
+  const g = S.g, pass = ROLE === "pass";
+  let h = topbar(`Round ${g.round}/${g.rounds} · ${g.score} pts`);
+  if (!inGame()) return h + spectator();
+  const pairOf = `<div class="faint small center">${esc(you(g.a))} &amp; ${esc(you(g.b))}</div>`;
+
+  if (g.phase === "pickA" || g.phase === "pickB") {
+    const who = g.phase === "pickA" ? g.a : g.b;
+    h += pairOf + pairHtml(g, true);
+    if (mine(who)) {
+      const who2 = ROLE === "host" && ME !== who ? ` (offline, so you pick for them)` : "";
+      h += hint(g.phase === "pickA" ? `<b>${esc(you(who))}</b>${who2}, play a word from your hand.` : `<b>${esc(you(who))}</b>${who2}, play a word that goes with <b>${esc(g.pair[0])}</b>.`);
+      h += `<div class="hand">${g.hands[who].map((w, i) => `<button class="hcard" data-a="mdPick" data-v="${who}" data-i="${i}">${esc(w)}</button>`).join("")}</div>`;
+      return h;
+    }
+    return h + wait(`${esc(nm(who))} is picking a word`);
+  }
+  if (g.phase === "say") {
+    h += pairOf + triesHtml(g) + pairHtml(g, g.tries === 1);
+    if (pass) {
+      return h + hint(`Think of a word that sits between these two. Tap <b>3-2-1</b>, and both say your word out loud together. Then type what you each said.`)
+        + `<button class="cta alt" data-a="countdown">3 · 2 · 1</button>`
+        + `<div class="field"><label for="mp-0">${esc(nm(g.a))} said</label><input class="inp big" id="mp-0" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" value="${esc(U.drafts["mp-0"] || "")}"></div>`
+        + `<div class="field"><label for="mp-1">${esc(nm(g.b))} said</label><input class="inp big" id="mp-1" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(U.drafts["mp-1"] || "")}"></div>`
+        + `<div class="bottom"><button class="cta" data-a="mdBoth">Did we match?</button></div>`;
+    }
+    const inPair = ME === g.a || ME === g.b;
+    const n = [g.a, g.b].filter(p => g.said[p]).length;
+    const cover = [g.a, g.b].filter(p => ROLE === "host" && !online(p) && !g.said[p] && p !== ME);
+    let body = "";
+    if (inPair && !g.said[ME]) {
+      body = hint(`Type a word that sits between these two. You'll both be revealed at once.`)
+        + `<input class="inp big" id="ms-${ME}" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Your word" value="${esc(U.drafts["ms-" + ME] || "")}" aria-label="Your word">`
+        + `<div class="bottom"><button class="cta" data-a="mdSay" data-v="${ME}">Lock in</button></div>`;
+    } else body = wait(inPair ? `Locked in: ${esc(g.said[ME])}. Waiting for ${esc(nm(ME === g.a ? g.b : g.a))}` : `${esc(nm(g.a))} and ${esc(nm(g.b))} are thinking (${n}/2 locked in)`);
+    cover.forEach(p => {
+      body += `<div class="field"><label for="ms-${p}">${esc(nm(p))} is offline. Type their word</label><input class="inp" id="ms-${p}" maxlength="24" autocomplete="off" value="${esc(U.drafts["ms-" + p] || "")}"></div>
+        <button class="ghost" data-a="mdSay" data-v="${p}">Lock in for ${esc(nm(p))}</button>`;
+    });
+    return h + body;
+  }
+  if (g.phase === "reveal") {
+    const over = mdRoundOver(g), last = over && g.round >= g.rounds;
+    h += pairOf + triesHtml(g) + pairHtml(g, false);
+    h += `<div class="said ${g.match ? "match" : ""}"><div><span>${esc(you(g.a))}</span><b>${esc(g.said[g.a])}</b></div><div><span>${esc(you(g.b))}</span><b>${esc(g.said[g.b])}</b></div></div>`;
+    if (g.match) h += `<div class="banner good"><span class="big">+${mdPts(g)}</span>${["", "First try! Mind readers.", "Matched on the second try", "Just made it on the last try"][g.tries]}</div>`;
+    else if (over) h += `<div class="banner bad"><span class="big">No match</span>Three tries and no match. 0 points.</div>`;
+    else h += `<div class="banner neutral"><span class="big">No match</span>Now find the word between <b>${esc(g.said[g.a])}</b> and <b>${esc(g.said[g.b])}</b>.</div>`;
+    if (g.chain.length > 1) h += `<div class="chain">${g.chain.map((c, i) => `<div>Try ${i + 1}: ${esc(c[0])} + ${esc(c[1])}</div>`).join("")}</div>`;
+    h += `<div class="bottom">${!g.match && (pass || g.roster.includes(ME)) ? `<button class="ghost" data-a="mdCount">We said the same thing, count it</button>` : ""}
+      <button class="cta" data-a="mdNext">${last ? "See how you did" : over ? "Next round" : `Try ${g.tries + 1} of 3`}</button></div>`;
+    return h;
+  }
+  return h;
+}
+
+/* ---------- game over ---------- */
+function overView() {
+  const g = S.g, m = MODES[S.mode];
+  let head = "", sub = "", good = true, extra = "";
+  if (g.type === "one") {
+    // the classic 13-card scale, stretched to the deck size you played
+    const s = Math.round(g.score * 13 / g.cards);
+    head = s >= 13 ? "Perfect score!" : s >= 12 ? "Incredible!" : s >= 11 ? "Awesome!" : s >= 9 ? "Wow, not bad!" : s >= 7 ? "You're in the club" : s >= 4 ? "A good start" : "Try again!";
+    sub = `${g.score} of ${g.cards} cards`;
+    good = s >= 7;
+    extra = `<div class="chips">${g.hist.map(x => `<span class="chip ${x.r === "right" ? "done" : "bad"}">${x.r === "right" ? "✓" : "✗"} ${esc(x.w)}</span>`).join("")}</div>`;
+  } else if (g.type === "clover") {
+    const pct = g.possible ? g.score / g.possible : 0;
+    head = pct >= .9 ? "Four-leaf luck!" : pct >= .65 ? "Clover crew" : pct >= .4 ? "Budding nicely" : "Weeds, mostly";
+    sub = `${g.score} of ${g.possible} points`;
+    good = pct >= .4;
+  } else {
+    const avg = g.score / Math.max(1, g.hist.length);
+    head = avg >= 2.2 ? "Total mind readers" : avg >= 1.5 ? "Strong connection" : avg >= .8 ? "Some static" : "Bad signal";
+    sub = `${g.score} points in ${g.hist.length} rounds`;
+    good = avg >= .8;
+    extra = `<div class="chips">${g.hist.map(x => `<span class="chip ${x.pts ? "done" : "bad"}">${x.pts ? "+" + x.pts + " " + esc(x.w) : "✗ " + esc(nm(x.a)) + " & " + esc(nm(x.b))}</span>`).join("")}</div>`;
+  }
+  const host = isHostDevice();
+  return `<section class="screen" style="justify-content:center">
+    <div class="center"><span class="mchip">${m.name}</span></div>
+    <div class="banner ${good ? "good" : "bad"}"><span class="big">${esc(head)}</span>${esc(sub)}</div>
+    ${extra}
+    <div class="bottom">
+      ${host ? `<button class="cta" data-a="again">Play ${m.name} again</button>
+                <button class="cta alt" data-a="${ROLE === "pass" ? "changeGame" : "lobby"}">${ROLE === "pass" ? "Pick another game" : "Back to the lobby"}</button>`
+             : wait(`Waiting for ${esc(nm(S.hostId))} to pick what's next`)}
+      ${ROLE === "guest" ? `<button class="link" data-a="leave">Leave room</button>` : ""}
+    </div>
+  </section>`;
+}
+
+/* ---------- sheets ---------- */
+function sheetView() {
+  const s = U.sheet; if (!s) return "";
+  let inner = "";
+  if (s.k === "rules") {
+    const k = s.mode;
+    inner = `<div class="row"><div class="display grow" style="font-size:34px;color:${MODES[k].color}">${MODES[k].name}</div></div>
+      ${rulesBlock(k)}<button class="cta" data-a="close">Got it</button>`;
+  } else if (s.k === "menu") {
+    const off = ROLE === "host" && S && S.g && S.stage === "play" ? S.g.roster.filter(p => p !== ME) : [];
+    inner = `<div class="eyebrow">Menu</div>
+      <button class="cta alt" data-a="rules">How to play ${MODES[S.mode].name}</button>
+      ${S.play === "room" ? `<button class="cta alt" data-a="share">Share invite link (${esc(S.code)})</button>` : ""}
+      ${off.length ? `<div class="eyebrow">Remove a player from this game</div><div class="chips">${off.map(p => `<button class="chip" data-a="drop" data-v="${p}">${online(p) ? "" : "⚪ "}${esc(nm(p))}</button>`).join("")}</div>` : ""}
+      ${ROLE === "pass" ? `<button class="cta alt" data-a="endPass">End game</button>` : ""}
+      ${ROLE === "host" ? `<button class="cta alt" data-a="lobby">End game, back to lobby</button><button class="cta alt" data-a="closeRoom">Close the room</button>` : ""}
+      ${ROLE === "guest" ? `<button class="cta alt" data-a="leave">Leave room</button>` : ""}
+      <button class="link" data-a="close">Close</button>`;
+  } else if (s.k === "modes") {
+    inner = `<div class="eyebrow">Pick a game</div><div class="modes">${Object.keys(MODES).map(k => modeCard(k).replace('data-a="pick"', 'data-a="setMode"')).join("")}</div>
+      <button class="link" data-a="close">Cancel</button>`;
+  } else if (s.k === "ask") {
+    inner = `<div style="font-size:22px;font-weight:800">${esc(s.text)}</div>
+      <button class="cta" data-a="${s.then}" ${s.v ? `data-v="${esc(s.v)}"` : ""}>${esc(s.yes)}</button>
+      <button class="cta alt" data-a="close">Cancel</button>`;
+  }
+  return `<div class="sheet" data-a="scrim"><div class="in" role="dialog" aria-modal="true">${inner}</div></div>`;
+}
+
+/* ================= render ================= */
+function view() {
+  if (!S) return ({ home: homeView, mode: modeView, setup: setupView, host: hostView, join: joinView, connecting: connectingView }[U.screen] || homeView)();
+  if (S.stage === "lobby") return lobbyView();
+  if (S.stage === "over") return overView();
+  const v = { one: oneView, clover: cloverView, medium: mediumView }[S.mode]();
+  return `<section class="screen">${v}</section>`;
+}
+let lastKey = "";
+function render() {
+  const mode = (S && S.mode) || (U.screen !== "home" && U.screen !== "join" ? U.pick : "") || "";
+  document.body.dataset.mode = mode;
+  const g = S && S.g;
+  if (!g || g.type !== "clover" || g.phase !== "solve" || (U.sel != null && pieceLocked(g, U.sel))) U.sel = null;
+  const ae = document.activeElement;
+  const keep = ae && ae.id && ae.tagName === "INPUT" ? { id: ae.id, s: ae.selectionStart, e: ae.selectionEnd } : null;
+  // only animate the screen when the "page" actually changes
+  const key = S ? [S.stage, g && g.phase, g && g.round, g && g.qi, g && g.tries, U.rev].join("|") : U.screen + U.pick;
+  app.innerHTML = view();
+  if (key === lastKey) app.querySelectorAll(".screen").forEach(el => el.style.animation = "none");
+  lastKey = key;
+  if (keep) { const el = document.getElementById(keep.id); if (el) { el.focus({ preventScroll: true }); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
+  layer.innerHTML = sheetView();
+  if (S && S.stage === "over" && !U.cele) { U.cele = true; confetti(); }
+  if (!S || S.stage !== "over") U.cele = false;
+}
+
+/* ================= toast, confetti, countdown ================= */
+let toastT;
+function toast(msg) {
+  const old = document.querySelector(".toast"); if (old) old.remove();
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t);
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
+}
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = document.createElement("canvas"); c.className = "confetti"; document.body.appendChild(c);
+  const x = c.getContext("2d"), W = c.width = innerWidth, H = c.height = innerHeight;
+  const cols = ["#ff8a3d", "#3ecf6e", "#b07bff", "#25c281", "#f4f5fb"];
+  const P = Array.from({ length: 140 }, () => ({ x: W / 2 + (Math.random() - .5) * 80, y: H * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, s: 5 + Math.random() * 6, r: Math.random() * 6, c: cols[rnd(5)] }));
+  let f = 0;
+  (function tick() {
+    x.clearRect(0, 0, W, H);
+    P.forEach(p => { p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += .15; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); });
+    if (++f < 150) requestAnimationFrame(tick); else c.remove();
+  })();
+}
+function countdown() {
+  if (document.querySelector(".countdown")) return;
+  const el = document.createElement("div"); el.className = "countdown"; el.setAttribute("aria-live", "assertive");
+  document.body.appendChild(el);
+  const steps = ["3", "2", "1", "Say it!"];
+  steps.forEach((t, i) => setTimeout(() => { el.innerHTML = `<span class="${i === 3 ? "say" : ""}">${t}</span>`; }, i * 800));
+  setTimeout(() => { el.remove(); const i = $("#mp-0"); if (i) i.focus(); }, steps.length * 800 + 300);
+}
+
+/* ================= input handling ================= */
+function inviteLink() {
+  const u = new URL(location.href); u.search = ""; u.hash = "";
+  u.searchParams.set("room", S.code);
+  ["net", "peerhost"].forEach(k => { if (params.get(k)) u.searchParams.set(k, params.get(k)); });
+  return u.toString();
+}
+async function share() {
+  const url = inviteLink();
+  try {
+    if (navigator.share) { await navigator.share({ title: "Word Games", text: `Join my ${MODES[S.mode].name} room: ${S.code}`, url }); return; }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(url); toast("Invite link copied"); }
+  catch (e) { prompt("Copy this link:", url); }
+}
+function addName() {
+  const n = cleanName(U.drafts.newname);
+  if (!n) return;
+  if (U.pp.some(p => p.name.toLowerCase() === n.toLowerCase())) { toast(n + " is already playing"); return; }
+  U.pp.push({ id: uid(), name: n });
+  U.drafts.newname = ""; render();
+  const el = $("#newname"); if (el) el.focus();
+}
+async function createRoom() {
+  const name = cleanName(U.drafts.hostname ?? U.name);
+  if (!name) { U.err = "Enter your name first."; render(); return; }
+  U.name = name; store.set("wordgames-name", name);
+  U.err = ""; U.net = "Opening a room…"; U.screen = "connecting"; render();
+  const tok = U.conn = (U.conn || 0) + 1;
+  try {
+    const code = await hostRoom(newCode());
+    if (tok !== U.conn) { try { Net.peer.destroy(); } catch (e) {} Net.peer = null; return; }
+    ROLE = "host"; ME = uid();
+    S = { v: 0, play: "room", code, mode: U.pick, hostId: ME, stage: "lobby", sets: JSON.parse(JSON.stringify(U.sets)),
+          players: [{ id: ME, name, on: true }], g: null };
+    commit();
+  } catch (e) { if (tok !== U.conn) return; U.screen = "host"; U.err = e.message; render(); }
+}
+async function doJoin(code, name) {
+  U.err = ""; U.net = `Joining room ${code}…`; U.screen = "connecting"; render();
+  const tok = U.conn = (U.conn || 0) + 1;
+  try {
+    await joinRoom(code, name);
+    if (tok !== U.conn) { goHome(); return; }
+    ROLE = "guest"; U.screen = "home";
+    store.set("wordgames-save", { role: "guest", code, mode: S && S.mode, t: Date.now() });
+    render();
+  } catch (e) { if (tok !== U.conn) return; U.screen = "join"; U.err = e.message; render(); }
+}
+async function resume() {
+  const sv = store.get("wordgames-save", null); if (!sv) return;
+  if (sv.role === "pass") { ROLE = "pass"; ME = null; S = sv.S; render(); return; }
+  if (sv.role === "guest") { U.joinCode = sv.code; return doJoin(sv.code, U.name || "Player"); }
+  U.net = `Reopening room ${sv.S.code}…`; U.screen = "connecting"; render();
+  try {
+    await hostRoom(sv.S.code, true);
+    ROLE = "host"; ME = sv.me; S = sv.S;
+    S.players.forEach(p => p.on = p.id === ME);
+    commit();
+  } catch (e) { U.screen = "home"; render(); toast(e.message); }
+}
+// read a set of word inputs from the drafts; toast and return null if any is missing or not one word
+function readWords(ids, needOne) {
+  const out = ids.map(id => cleanWord(U.drafts[id]));
+  const bad = out.findIndex(w => !w || (needOne && !oneWord(w)));
+  if (bad > -1) {
+    toast(!out[bad] ? (ids.length > 1 ? "Fill in every clue" : "Type a word first") : "One word only (no spaces)");
+    const el = document.getElementById(ids[bad]); if (el) el.focus();
+    return null;
+  }
+  return out;
+}
+const clearDrafts = ids => ids.forEach(id => delete U.drafts[id]);
+
+document.addEventListener("input", e => {
+  const t = e.target; if (!t.id) return;
+  if (t.id === "joincode") t.value = t.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  U.drafts[t.id] = t.value;
+  // keep the clover's leaves in step with what's being typed
+  const m = /^cl-.+-(\d)$/.exec(t.id);
+  if (m) { const leaf = document.querySelector(`.leaf.l${m[1]}`); if (leaf) { leaf.textContent = t.value.trim() || String(Number(m[1]) + 1); leaf.classList.toggle("q", !t.value.trim()); } }
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" || !e.target.id) return;
+  const id = e.target.id;
+  const nextIn = () => { const all = [...document.querySelectorAll("input.inp")], i = all.indexOf(e.target); if (i > -1 && all[i + 1]) { all[i + 1].focus(); return true; } return false; };
+  if (id === "newname") addName();
+  else if (id === "hostname") createRoom();
+  else if (id === "joincode" || id === "joinname") handle("joinRoom");
+  else if (id.startsWith("jc-")) { if (!nextIn()) handle("joClue", id.slice(3).replace(/-\d+$/, "")); }
+  else if (id === "jg") handle("joGuess");
+  else if (id.startsWith("cl-")) { if (/-3$/.test(id) || !nextIn()) handle("clWrite", id.slice(3).replace(/-\d$/, "")); }
+  else if (id.startsWith("ms-")) handle("mdSay", id.slice(3));
+  else if (id === "mp-0") nextIn();
+  else if (id === "mp-1") handle("mdBoth");
+});
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-a]"); if (!el || el.disabled) return;
+  if (el.dataset.a === "scrim" && e.target !== el) return;
+  handle(el.dataset.a, el.dataset.v, el);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && U.sheet) { U.sheet = null; render(); return; }
+  // cards are focusable divs: Enter/Space picks them up
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches('[role="button"][data-a]')) { e.preventDefault(); e.target.click(); }
+});
+
+function ask(text, yes, then, v) { U.sheet = { k: "ask", text, yes, then, v }; render(); }
+function handle(a, v, el) {
+  const g = S && S.g;
+  switch (a) {
+    /* ---- local navigation ---- */
+    case "home": U.conn = (U.conn || 0) + 1; U.screen = "home"; U.err = ""; render(); scrollTo(0, 0); return;
+    case "pick": U.pick = v; U.screen = "mode"; U.err = ""; render(); scrollTo(0, 0); return;
+    case "goSetup": U.screen = "setup"; render(); scrollTo(0, 0); return;
+    case "goHost": U.screen = "host"; U.err = ""; render(); scrollTo(0, 0); return;
+    case "goJoin": U.screen = "join"; U.err = ""; render(); return;
+    case "addName": addName(); return;
+    case "rmName": U.pp = U.pp.filter(p => p.id !== v); render(); return;
+    case "startPass": {
+      const m = MODES[U.pick]; if (U.pp.length < m.min || U.pp.length > m.max) return;
+      ROLE = "pass"; ME = null;
+      S = { v: 0, play: "pass", code: null, mode: U.pick, hostId: null, stage: "lobby", sets: JSON.parse(JSON.stringify(U.sets)),
+            players: U.pp.map(p => ({ id: p.id, name: p.name, on: true })), g: null };
+      startGame(); commit(); scrollTo(0, 0); return;
+    }
+    case "createRoom": createRoom(); return;
+    case "joinRoom": {
+      const code = String(U.drafts.joincode ?? U.joinCode).toUpperCase(), name = cleanName(U.drafts.joinname ?? U.name);
+      if (code.length !== 4) { U.err = "Room codes are 4 letters."; render(); return; }
+      if (!name) { U.err = "Enter your name."; render(); return; }
+      U.joinCode = code; U.name = name; store.set("wordgames-name", name);
+      doJoin(code, name); return;
+    }
+    case "resume": resume(); return;
+    case "reconnect": reconnect(false); return;
+    case "share": share(); return;
+    case "rules": U.sheet = { k: "rules", mode: (S && S.mode) || U.pick }; render(); return;
+    case "menu": U.sheet = { k: "menu" }; render(); return;
+    case "modePick": U.sheet = { k: "modes" }; render(); return;
+    case "close": case "scrim": U.sheet = null; render(); return;
+    case "reveal": U.rev = revKey(v); render(); scrollTo(0, 0); return;
+    case "countdown": countdown(); return;
+    case "leave": ask("Leave this room?", "Leave", "yesLeave"); return;
+    case "closeRoom": ask("Close the room for everyone?", "Close room", "yesClose"); return;
+    case "endPass": ask("End this game?", "End game", "yesEnd"); return;
+    case "yesLeave": case "yesClose": goHome(); return;
+    case "yesEnd": { const k = S.mode; goHome(); U.pick = k; U.screen = "mode"; render(); return; }
+    case "changeGame": goHome(); return;
+
+    /* ---- settings before a game exists ---- */
+    case "set":
+      if (!S) {
+        U.sets[U.pick][el.dataset.k] = Number(v);
+        store.set("wordgames-sets", U.sets); render(); return;
+      }
+      act({ type: "set", k: el.dataset.k, v }); return;
+
+    /* ---- Just One ---- */
+    case "joClue": {
+      const ids = Array.from({ length: perClue(g) }, (_, i) => `jc-${v}-${i}`);
+      const w = readWords(ids, true); if (!w) return;
+      clearDrafts(ids); U.rev = null;
+      act({ type: "joClue", v, val: w }); scrollTo(0, 0); return;
+    }
+    case "joSkipClue": act({ type: "joClue", v, val: [] }); return;
+    case "joSkipWord": ask("Skip this word and draw a new one?", "Skip it", "yesSkipWord"); return;
+    case "yesSkipWord": U.sheet = null; Object.keys(U.drafts).filter(k => k.startsWith("jc-")).forEach(k => delete U.drafts[k]); act({ type: "joSkipWord" }); return;
+    case "joGuess": {
+      const w = readWords(["jg"], false); if (!w) return;
+      clearDrafts(["jg"]); act({ type: "joGuess", val: w[0] }); scrollTo(0, 0); return;
+    }
+    case "joPass": clearDrafts(["jg"]); act({ type: "joGuess", val: "" }); scrollTo(0, 0); return;
+
+    /* ---- So Clover! ---- */
+    case "clWrite": {
+      const ids = [0, 1, 2, 3].map(i => `cl-${v}-${i}`);
+      const w = readWords(ids, true); if (!w) return;
+      clearDrafts(ids); U.rev = null;
+      act({ type: "clWrite", v, val: w }); scrollTo(0, 0); return;
+    }
+    case "clRedeal": { const ids = [0, 1, 2, 3].map(i => `cl-${v}-${i}`); clearDrafts(ids); act({ type: "clRedeal", v }); return; }
+    case "clPick": {
+      const p = Number(v), s = g.slots.indexOf(p);
+      if (U.sel === p) U.sel = null;
+      else if (U.sel != null && s > -1) { act({ type: "clPlace", p: U.sel, s }); U.sel = null; return; }
+      else U.sel = p;
+      render(); return;
+    }
+    case "clSlot": if (U.sel != null) { const p = U.sel; U.sel = null; act({ type: "clPlace", p, s: Number(v) }); } else toast("Tap a card first"); return;
+    case "clRot": act({ type: "clRot", v: Number(v) }); return;
+    case "clTray": U.sel = null; act({ type: "clTray", v: Number(v) }); return;
+    case "clCheck": U.sel = null; act({ type: "clCheck" }); scrollTo(0, 0); return;
+
+    /* ---- Medium ---- */
+    case "mdPick": act({ type: "mdPick", v, i: Number(el.dataset.i) }); return;
+    case "mdSay": {
+      const w = readWords(["ms-" + v], false); if (!w) return;
+      if (onTable(g, w[0])) { toast("That word's already on the table"); return; }
+      clearDrafts(["ms-" + v]); act({ type: "mdSay", v, val: w[0] }); return;
+    }
+    case "mdBoth": {
+      const w = readWords(["mp-0", "mp-1"], false); if (!w) return;
+      if (w.some(x => onTable(g, x))) { toast("You can't say a word that's already on the table"); return; }
+      clearDrafts(["mp-0", "mp-1"]); act({ type: "mdBoth", val: w }); scrollTo(0, 0); return;
+    }
+
+    /* ---- game actions (go through the host) ---- */
+    case "setMode": U.sheet = null; act({ type: "setMode", v }); return;
+    case "drop": ask(`Remove ${nm(v)} from this game?`, "Remove", "yesDrop", v); return;
+    case "yesDrop": U.sheet = null; act({ type: "drop", v }); return;
+    case "lobby": U.sheet = null; act({ type: "lobby" }); return;
+    case "joNext": case "clNext": case "mdNext": case "joShow":
+      act({ type: a, v }); scrollTo(0, 0); return;
+    default: act({ type: a, v });
+  }
+}
+
+/* ================= boot ================= */
+// test hook: lets automated checks read state (harmless in normal play)
+window.__wordgames = { get S() { return S; }, get ME() { return ME; }, get ROLE() { return ROLE; }, keyOf };
+render();
+// reloaded a tab that was already in this room? slip straight back in
+if (U.joinCode && tabStore.get("wordgames-pid-" + U.joinCode) && U.name) doJoin(U.joinCode, U.name);
+})();
+</script>
+</body>
+</html>
